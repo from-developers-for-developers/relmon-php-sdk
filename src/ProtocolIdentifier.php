@@ -35,7 +35,14 @@ class ProtocolIdentifier
             throw new ProtocolIdentifierInvalidException('Protocol options not found in ProtocolIdentifier.');
         }
 
-        list($determinismLevel, $modes) = explode(':', $protocolOptions);
+        $protocolOptions = explode(':', $protocolOptions);
+
+        if (count($protocolOptions) > 2 || count($protocolOptions) < 1) {
+            throw new ProtocolIdentifierInvalidException('Protocol options should be in format "determinismLevel[?:mode1[?.mode2...]]".');
+        }
+
+        $determinismLevel = $protocolOptions[0];
+        $modes = $protocolOptions[1] ?? [];
 
         $this->determinismLevel = DeterminismLevelEnum::from((int)$determinismLevel);
 

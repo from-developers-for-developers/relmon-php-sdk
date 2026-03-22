@@ -59,6 +59,14 @@ class DerivationService
             throw new DerivationException('Net, gross and tax must be specified for DL3.');
         }
 
+        if ($basis->getGrossInMinors() < $basis->getNetInMinors()) {
+            throw new DerivationException('Gross must be greater then or equal to net.');
+        }
+
+        if ($basis->getNetInMinors() + $basis->getTaxInMinors() !== $basis->getGrossInMinors()) {
+            throw new DerivationException('Net + tax must be equal to gross.');
+        }
+
         if (!is_null($basis->getTaxRateInMinors()) && !is_null($taxRatePrecision)) {
             $this->validateReconstructedTax(
                 $basis->getNetInMinors(),
@@ -94,6 +102,10 @@ class DerivationService
             throw new DerivationException('Net, gross and tax rate must be specified for DL2.');
         }
 
+        if ($gross < $net) {
+            throw new DerivationException('Gross must be greater then or equal to net.');
+        }
+
         $this->validateReconstructedTax(
             $net,
             $gross,
@@ -116,15 +128,19 @@ class DerivationService
     {
         $taxRate = $basis->getTaxRateInMinors();
 
-        if (is_null($taxRatePrecision)) {
+        if (is_null($taxRatePrecision) || is_null($taxRate)) {
             throw new DerivationException('Tax rate must be specified for DL1.');
         }
 
         $net = $basis->getNetInMinors();
         $gross = $basis->getGrossInMinors();
+        $calculatedNet = $net;
+        $calculatedGross = $gross;
 
         if (is_null($net) && is_null($gross)) {
             throw new DerivationException('Net or gross must be specified for DL1.');
+        } elseif (!is_null($net) && !is_null($gross) && $gross < $net) {
+            throw new DerivationException('Gross must be greater then or equal to net.');
         }
 
         $taxRateDivisor = 100 * (10 ** $taxRatePrecision);
@@ -132,22 +148,30 @@ class DerivationService
         if ($roundingApplication === RoundingApplicationEnum::TAX) {
             if (!is_null($net)) {
                 $tax = $roundingMode->round($net * ($taxRate / $taxRateDivisor));
-                $gross = $net + $tax;
+                $calculatedGross = $net + $tax;
             } else {
                 $tax = $roundingMode->round($gross * $taxRate / ($taxRateDivisor + $taxRate));
-                $net = $gross - $tax;
+                $calculatedNet = $gross - $tax;
             }
         } else {
             if (!is_null($net)) {
-                $gross = $roundingMode->round($net * ($taxRate / $taxRateDivisor + 1));
-                $tax = $gross - $net;
+                $calculatedGross = $roundingMode->round($net * ($taxRate / $taxRateDivisor + 1));
+                $tax = $calculatedGross - $net;
             } else {
-                $net = $roundingMode->round($gross / ($taxRate / $taxRateDivisor + 1));
-                $tax = $gross - $net;
+                $calculatedNet = $roundingMode->round($gross / ($taxRate / $taxRateDivisor + 1));
+                $tax = $gross - $calculatedNet;
             }
         }
 
-        return new DerivedResultDto($net, $gross, $tax, $taxRate);
+        if ((!is_null($net) && $calculatedNet !== $net) || (!is_null($gross) && $calculatedGross !== $gross)) {
+            throw new DerivationException('Calculated net/gross must be equal to the explicitly defined net/gross.');
+        }
+
+        if ($calculatedNet + $tax !== $calculatedGross) {
+            throw new DerivationException('Net + tax must be equal to gross.');
+        }
+
+        return new DerivedResultDto($calculatedNet, $calculatedGross, $tax, $taxRate);
     }
 
     private function validateReconstructedTax(
