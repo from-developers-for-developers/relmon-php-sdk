@@ -130,15 +130,6 @@ class DerivationServiceTest extends TestCase
 
             // DL1
             [
-                new DummyMonetaryBasis(netInMinors: 10000, taxRateInMinors: 21000),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                null,
-                null,
-                new DerivationException('Tax rate must be specified for DL1.')
-            ],
-            [
                 new DummyMonetaryBasis(netInMinors: 10000),
                 new ProtocolIdentifier('relmon@1.0.0/1'),
                 RoundingModeEnum::HALF_EVEN,

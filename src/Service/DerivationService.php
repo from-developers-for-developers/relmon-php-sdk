@@ -123,12 +123,12 @@ class DerivationService
         MonetaryBasisInterface  $basis,
         RoundingModeEnum        $roundingMode,
         RoundingApplicationEnum $roundingApplication,
-        ?int                    $taxRatePrecision,
+        int                     $taxRatePrecision,
     ): DerivedResultDto
     {
         $taxRate = $basis->getTaxRateInMinors();
 
-        if (is_null($taxRatePrecision) || is_null($taxRate)) {
+        if (is_null($taxRate)) {
             throw new DerivationException('Tax rate must be specified for DL1.');
         }
 
