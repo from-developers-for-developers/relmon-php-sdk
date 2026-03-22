@@ -1,15 +1,15 @@
 <?php
 
-namespace RelMon\Enum;
+namespace FromDevelopersForDevelopers\RelMon\Enum;
 
-use RelMon\FormatParser\JsonArrayParser;
-use RelMon\FormatParser\JsonStringParser;
-use RelMon\FormatParser\UriJsonParser;
-use RelMon\FormatParser\UriMinimalisticParser;
-use RelMon\FormatParser\UriXmlParser;
-use RelMon\FormatParser\XmlDomDocumentParser;
-use RelMon\FormatParser\XmlSimpleXmlParser;
-use RelMon\FormatParser\XmlStringParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\JsonArrayParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\JsonStringParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\UriJsonParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\UriMinimalisticParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\UriXmlParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\XmlDomDocumentParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\XmlSimpleXmlParser;
+use FromDevelopersForDevelopers\RelMon\FormatParser\XmlStringParser;
 
 enum FormatEnum: string
 {

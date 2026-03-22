@@ -1,22 +1,22 @@
 <?php
 
-namespace RelMon\Service;
+namespace FromDevelopersForDevelopers\RelMon\Service;
 
 use Decimal\Decimal;
-use RelMon\Service\MinorsService;
-use RelMon\Dto\DerivedResultDto;
-use RelMon\Dto\RelMonDto;
-use RelMon\Enum\FormatEnum;
-use RelMon\Enum\RoundingApplicationEnum;
-use RelMon\Enum\RoundingModeEnum;
-use RelMon\Enum\ScopeEnum;
-use RelMon\Exception\FormatNotSupportedException;
-use RelMon\Exception\ValidationException;
-use RelMon\FormatParser\FormatParserFactory;
-use RelMon\MonetaryBasisInterface;
-use RelMon\MonetaryComponent;
-use RelMon\ProtocolIdentifier;
-use RelMon\RelMonObject;
+use FromDevelopersForDevelopers\RelMon\Service\MinorsService;
+use FromDevelopersForDevelopers\RelMon\Dto\DerivedResultDto;
+use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
+use FromDevelopersForDevelopers\RelMon\Enum\FormatEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
+use FromDevelopersForDevelopers\RelMon\Exception\FormatNotSupportedException;
+use FromDevelopersForDevelopers\RelMon\Exception\ValidationException;
+use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserFactory;
+use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\MonetaryComponent;
+use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\RelMonObject;
 
 class RelMonService
 {

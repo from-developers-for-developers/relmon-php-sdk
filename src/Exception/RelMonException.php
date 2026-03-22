@@ -1,6 +1,6 @@
 <?php
 
-namespace RelMon\Exception;
+namespace FromDevelopersForDevelopers\RelMon\Exception;
 
 class RelMonException extends \RuntimeException
 {

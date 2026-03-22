@@ -1,11 +1,11 @@
 <?php
 
-namespace RelMon;
+namespace FromDevelopersForDevelopers\RelMon;
 
 use Decimal\Decimal;
-use RelMon\Enum\RoundingApplicationEnum;
-use RelMon\Enum\RoundingModeEnum;
-use RelMon\Enum\ScopeEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
 
 class RelMonObject
 {

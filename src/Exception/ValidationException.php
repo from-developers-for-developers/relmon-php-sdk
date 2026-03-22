@@ -1,6 +1,6 @@
 <?php
 
-namespace RelMon\Exception;
+namespace FromDevelopersForDevelopers\RelMon\Exception;
 
 use JetBrains\PhpStorm\Pure;
 

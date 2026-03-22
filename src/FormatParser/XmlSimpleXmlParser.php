@@ -1,8 +1,8 @@
 <?php
 
-namespace RelMon\FormatParser;
+namespace FromDevelopersForDevelopers\RelMon\FormatParser;
 
-use RelMon\Dto\RelMonDto;
+use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
 
 class XmlSimpleXmlParser implements FormatParserInterface
 {

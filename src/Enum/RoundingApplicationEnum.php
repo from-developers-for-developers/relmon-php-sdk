@@ -1,6 +1,6 @@
 <?php
 
-namespace RelMon\Enum;
+namespace FromDevelopersForDevelopers\RelMon\Enum;
 
 enum RoundingApplicationEnum: string
 {

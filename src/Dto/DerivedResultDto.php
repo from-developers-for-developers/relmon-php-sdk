@@ -1,6 +1,6 @@
 <?php
 
-namespace RelMon\Dto;
+namespace FromDevelopersForDevelopers\RelMon\Dto;
 
 class DerivedResultDto
 {

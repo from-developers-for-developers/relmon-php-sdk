@@ -1,6 +1,6 @@
 <?php
 
-namespace RelMon;
+namespace FromDevelopersForDevelopers\RelMon;
 
 use Decimal\Decimal;
 

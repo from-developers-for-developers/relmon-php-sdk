@@ -1,8 +1,8 @@
 <?php
 
-namespace RelMon\Service;
+namespace FromDevelopersForDevelopers\RelMon\Service;
 
-use RelMon\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
 
 class MinorsService
 {

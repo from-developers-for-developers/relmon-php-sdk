@@ -1,8 +1,8 @@
 <?php
 
-namespace RelMon\Dto;
+namespace FromDevelopersForDevelopers\RelMon\Dto;
 
-use RelMon\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
 
 class MonetaryComponentDto implements MonetaryBasisInterface
 {

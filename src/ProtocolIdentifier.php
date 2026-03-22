@@ -1,9 +1,9 @@
 <?php
 
-namespace RelMon;
+namespace FromDevelopersForDevelopers\RelMon;
 
-use RelMon\Enum\DeterminismLevelEnum;
-use RelMon\Exception\ProtocolIdentifierInvalidException;
+use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
+use FromDevelopersForDevelopers\RelMon\Exception\ProtocolIdentifierInvalidException;
 
 class ProtocolIdentifier
 {

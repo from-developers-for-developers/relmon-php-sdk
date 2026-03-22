@@ -1,9 +1,9 @@
 <?php
 
-namespace RelMon\FormatParser;
+namespace FromDevelopersForDevelopers\RelMon\FormatParser;
 
-use RelMon\Enum\FormatEnum;
-use RelMon\Exception\FormatParserNotSupportedException;
+use FromDevelopersForDevelopers\RelMon\Enum\FormatEnum;
+use FromDevelopersForDevelopers\RelMon\Exception\FormatParserNotSupportedException;
 
 class FormatParserFactory
 {

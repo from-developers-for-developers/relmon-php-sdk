@@ -1,6 +1,6 @@
 <?php
 
-namespace RelMon\Exception;
+namespace FromDevelopersForDevelopers\RelMon\Exception;
 
 class FormatNotSupportedException extends RelMonException
 {

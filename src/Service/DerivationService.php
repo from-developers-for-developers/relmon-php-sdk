@@ -1,14 +1,14 @@
 <?php
 
-namespace RelMon\Service;
+namespace FromDevelopersForDevelopers\RelMon\Service;
 
-use RelMon\Dto\DerivedResultDto;
-use RelMon\Enum\DeterminismLevelEnum;
-use RelMon\Enum\RoundingApplicationEnum;
-use RelMon\Enum\RoundingModeEnum;
-use RelMon\Exception\DerivationException;
-use RelMon\MonetaryBasisInterface;
-use RelMon\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\Dto\DerivedResultDto;
+use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
+use FromDevelopersForDevelopers\RelMon\Exception\DerivationException;
+use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
 
 class DerivationService
 {

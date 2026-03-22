@@ -1,0 +1,18 @@
+{
+    "name": "from-developers-for-developers/relmon-php-sdk",
+    "description": "Official PHP SDK for RelMon protocol",
+    "type": "sdk",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "FromDevelopersForDevelopers\\RelMon\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Dmitrijs Abrosimovs",
+            "email": "abrosimovs@gmail.com"
+        }
+    ],
+    "require": {}
+}
