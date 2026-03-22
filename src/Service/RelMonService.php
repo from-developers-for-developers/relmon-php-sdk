@@ -21,9 +21,9 @@ use FromDevelopersForDevelopers\RelMon\RelMonObject;
 class RelMonService
 {
     public function __construct(
-        private readonly FormatParserFactory $formatParserFactory,
-        private readonly MinorsService       $minorsService,
-        private readonly DerivationService   $derivationService,
+        private FormatParserFactory $formatParserFactory,
+        private MinorsService       $minorsService,
+        private DerivationService   $derivationService,
     )
     {
     }

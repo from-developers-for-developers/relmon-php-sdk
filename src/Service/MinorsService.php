@@ -6,7 +6,11 @@ use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
 
 class MinorsService
 {
-    public function toMinors(MonetaryBasisInterface $basis, int $precision, ?int $taxRatePrecision): MonetaryBasisInterface
+    public function toMinors(
+        MonetaryBasisInterface $basis,
+        int $precision,
+        ?int $taxRatePrecision = null
+    ): MonetaryBasisInterface
     {
         // round() is used here to handle float imprecision, e.g. 20.40 * 100 = 2039.9999999999998
         $netInMinors = is_null($basis->getNet()) ? null : (int)round($basis->getNet() * (10 ** $precision));
@@ -15,10 +19,10 @@ class MinorsService
         $taxRateInMinors = null;
 
         if (!is_null($basis->getTaxRate()) && !is_null($taxRatePrecision)) {
-            $taxRateInMinors = (int)pow($basis->getTaxRate(), $taxRatePrecision);
+            $taxRateInMinors = (int)round($basis->getTaxRate() * (10 ** $taxRatePrecision));
         }
 
-        return new readonly class(
+        return new class(
             $basis,
             $netInMinors,
             $grossInMinors,
