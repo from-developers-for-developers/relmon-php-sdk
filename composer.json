@@ -5,7 +5,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "FromDevelopersForDevelopers\\RelMon\\": "src/"
+            "FromDevelopersForDevelopers\\RelMon\\": "src/",
+            "FromDevelopersForDevelopers\\RelMon\\Tests\\": "tests/"
         }
     },
     "authors": [
@@ -14,5 +15,10 @@
             "email": "abrosimovs@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
+    }
 }

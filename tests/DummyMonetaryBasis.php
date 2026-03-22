@@ -1,22 +1,20 @@
 <?php
 
-namespace FromDevelopersForDevelopers\RelMon\Dto;
+namespace FromDevelopersForDevelopers\RelMon\Tests;
 
 use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
 
-class MonetaryComponentDto implements MonetaryBasisInterface
+class DummyMonetaryBasis implements MonetaryBasisInterface
 {
-    private ?int $netInMinors = null;
-    private ?int $grossInMinors = null;
-    private ?int $taxInMinors = null;
-    private ?int $taxRateInMinors = null;
-
     public function __construct(
         private null|string|int $net = null,
         private null|string|int $gross = null,
         private null|string|int $tax = null,
         private null|string|int $taxRate = null,
-        private ?string         $comment = null,
+        private ?int $netInMinors = null,
+        private ?int $grossInMinors = null,
+        private ?int $taxInMinors = null,
+        private ?int $taxRateInMinors = null,
     )
     {
     }
@@ -41,11 +39,6 @@ class MonetaryComponentDto implements MonetaryBasisInterface
         return $this->taxRate;
     }
 
-    public function getComment(): ?string
-    {
-        return $this->comment;
-    }
-
     public function getNetInMinors(): ?int
     {
         return $this->netInMinors;
@@ -64,15 +57,5 @@ class MonetaryComponentDto implements MonetaryBasisInterface
     public function getTaxRateInMinors(): ?int
     {
         return $this->taxRateInMinors;
-    }
-
-    public function setMinors(MonetaryBasisInterface $basis): self
-    {
-        $this->netInMinors = $basis->getNetInMinors();
-        $this->grossInMinors = $basis->getGrossInMinors();
-        $this->taxInMinors = $basis->getTaxInMinors();
-        $this->taxRateInMinors = $basis->getTaxRateInMinors();
-
-        return $this;
     }
 }
