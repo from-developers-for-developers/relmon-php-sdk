@@ -2,26 +2,29 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Service;
 
-use Decimal\Decimal;
-use FromDevelopersForDevelopers\RelMon\Service\MinorsService;
-use FromDevelopersForDevelopers\RelMon\Dto\DerivedResultDto;
 use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
+use FromDevelopersForDevelopers\RelMon\Dto\ViolationDto;
 use FromDevelopersForDevelopers\RelMon\Enum\FormatEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
 use FromDevelopersForDevelopers\RelMon\Exception\FormatNotSupportedException;
+use FromDevelopersForDevelopers\RelMon\Exception\ProtocolIdentifierInvalidException;
 use FromDevelopersForDevelopers\RelMon\Exception\ValidationException;
 use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserFactory;
 use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
 use FromDevelopersForDevelopers\RelMon\MonetaryComponent;
 use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
 use FromDevelopersForDevelopers\RelMon\RelMonObject;
+use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
+use FromDevelopersForDevelopers\RelMon\ValueObject\ValidatedMonetaryComponent;
+use FromDevelopersForDevelopers\RelMon\ValueObject\ValidatedRelMon;
 
 class RelMonService
 {
     public function __construct(
         private FormatParserFactory $formatParserFactory,
+        private ValidationService   $validationService,
         private MinorsService       $minorsService,
         private DerivationService   $derivationService,
     )
@@ -30,83 +33,55 @@ class RelMonService
 
     public function build(mixed $input, FormatEnum $formatEnum = FormatEnum::AUTO): RelMonObject
     {
-        $format = $this->guessFormat($input, $formatEnum);
-        $formatParser = $this->formatParserFactory->createFormatParser($format);
-        $dto = $formatParser->parse($input);
-        $violations = $this->validate($dto);
+        try {
+            $format = $this->guessFormat($input, $formatEnum);
+            $formatParser = $this->formatParserFactory->createFormatParser($format);
+            $dto = $formatParser->parse($input);
+            $protocolIdentifier = new ProtocolIdentifier($dto->protocolIdentifier);
 
-        if (!empty($violations)) {
-            throw new ValidationException($violations);
-        }
+            $violations = $this->validationService->validate($protocolIdentifier, $dto);
 
-        $protocolIdentifier = new ProtocolIdentifier($dto->protocolIdentifier);
-        $precision = $this->getPrecision($dto);
-        $roundingMode = $this->getRoundingMode($dto);
-        $roundingApplication = $this->getRoundingApplication($dto);
-        $taxRatePrecision = $this->getTaxRatePrecision($dto);
-
-        $minors = $this->minorsService->toMinors($dto, $precision, $taxRatePrecision);
-        $dto->setMinors($minors);
-
-        $components = [];
-
-        if ($dto->scope === ScopeEnum::COMPONENT->value) {
-            foreach ($dto->components as $component) {
-                $taxRatePrecision ??= $this->getTaxRatePrecision($component);
-                $minors = $this->minorsService->toMinors($component, $precision, $taxRatePrecision);
-                $component->setMinors($minors);
-
-                $componentDerivation = $this->derivationService->derive(
-                    $component,
-                    $protocolIdentifier,
-                    $roundingMode,
-                    $roundingApplication
-                );
-
-                $components[] = new MonetaryComponent(
-                    net: $dto->protocolIdentifier->isInMinorsMode()
-                        ? $componentDerivation->net
-                        : new Decimal($componentDerivation->net, $precision),
-
-                    gross: $dto->protocolIdentifier->isInMinorsMode()
-                        ? $component->gross
-                        : new Decimal($component->gross, $precision),
-
-                    tax: $dto->protocolIdentifier->isInMinorsMode()
-                        ? $component->tax
-                        : new Decimal(0, $precision),
-
-                    taxRate: $component->taxRate,
-                    comment: $component->comment,
-                );
+            if (!empty($violations)) {
+                throw new ValidationException($violations);
             }
+
+            $dto = $this->buildValidatedDto($protocolIdentifier, $dto);
+
+            $components = [];
+
+            if ($dto->getScope() === ScopeEnum::COMPONENT) {
+                foreach ($dto->getComponents() as $component) {
+                    $derived = $this->derivationService->derive($dto, $component);
+                    $components[] = new MonetaryComponent(
+                        net: $derived->getNetInMinors(),
+                        gross: $derived->getGrossInMinors(),
+                        tax: $derived->getTaxInMinors(),
+                        taxRate: $derived->getTaxRateInMinors(),
+                        comment: $component->getComment(),
+                    );
+                }
+            }
+
+            $derived = $this->derivationService->derive($dto, $dto);
+            $this->compareAmounts($derived, $components);
+
+            return new RelMonObject(
+                net: $derived->getNetInMinors(),
+                gross: $derived->getGrossInMinors(),
+                tax: $derived->getTaxInMinors(),
+                taxRate: $derived->getTaxRateInMinors(),
+                unit: $dto->getUnit(),
+                precision: $dto->getPrecision(),
+                scope: $dto->getScope(),
+                roundingMode: $dto->getRoundingMode(),
+                roundingApplication: $dto->getRoundingApplication(),
+                components: $components,
+            );
+        } catch (ProtocolIdentifierInvalidException $e) {
+            throw new ValidationException([new ViolationDto($e->getMessage(), 'protocolIdentifier')]);
+        } catch (\Throwable $e) {
+            // @TODO
         }
-
-        $rootDerivation = $this->derivationService->derive($dto);
-
-        $this->compareAmounts($rootDerivation, $components);
-
-        return new RelMonObject(
-            net: $dto->protocolIdentifier->isInMinorsMode()
-                ? $rootDerivation->net
-                : new Decimal($rootDerivation->net, $precision),
-
-            gross: $dto->protocolIdentifier->isInMinorsMode()
-                ? $rootDerivation->gross
-                : new Decimal($rootDerivation->gross, $precision),
-
-            tax: $dto->protocolIdentifier->isInMinorsMode()
-                ? $rootDerivation->tax
-                : new Decimal($rootDerivation->tax, $precision),
-
-            taxRate: $dto->taxRate,
-            unit: $dto->unit,
-            precision: $precision,
-            scope: $dto->scope ?? ScopeEnum::ROOT,
-            roundingMode: $dto->roundingMode ?? RoundingModeEnum::HALF_EVEN,
-            roundingApplication: $dto->roundingApplication ?? RoundingApplicationEnum::TAX,
-            components: $components,
-        );
     }
 
     private function guessFormat(mixed $input, FormatEnum $formatEnum): FormatEnum
@@ -140,7 +115,7 @@ class RelMonService
                 return FormatEnum::XML_STRING;
             }
 
-            if (json_validate($input)) {
+            if (str_starts_with($input, '{')) {
                 return FormatEnum::JSON_STRING;
             }
         }
@@ -148,37 +123,94 @@ class RelMonService
         throw new FormatNotSupportedException();
     }
 
-    private function validate(RelMonDto $dto): array
+    private function buildValidatedDto(ProtocolIdentifier $protocolIdentifier, RelMonDto $dto): ValidatedRelMon
     {
-        // @TODO: implement validation
-        return [];
+        $precision = $this->getPrecision($dto);
+        $taxRatePrecision = $this->getTaxRatePrecision($dto);
+        $components = [];
+
+        foreach ($dto->components as $component) {
+            $components[] = new ValidatedMonetaryComponent(
+                minorsBasis: $this->minorsService->toMinors($component, $precision),
+                taxRatePrecision: $taxRatePrecision ?? $this->getTaxRatePrecision($component),
+                comment: $component->getComment(),
+            );
+        }
+
+        return new ValidatedRelMon(
+            protocolIdentifier: $protocolIdentifier,
+            scope: ScopeEnum::tryFrom((string)$dto->scope) ?? ScopeEnum::ROOT,
+            roundingMode: RoundingModeEnum::tryFrom((string)$dto->roundingMode) ?? RoundingModeEnum::HALF_EVEN,
+            roundingApplication: RoundingApplicationEnum::tryFrom($dto->roundingApplication) ?? RoundingApplicationEnum::TAX,
+            minorsBasis: $this->minorsService->toMinors($dto, $precision),
+            unit: $dto->unit,
+            precision: $precision,
+            taxRatePrecision: $taxRatePrecision,
+            components: $components,
+        );
     }
 
-    private function compareAmounts(DerivedResultDto $rootDerivedResult, array $components): void
+    private function compareAmounts(DerivedResult $rootDerivedResult, array $components): void
     {
-        // @TODO: add comparison and throw an exception
+        if (empty($components)) {
+            return;
+        }
+
+        $totalNet = 0;
+        $totalGross = 0;
+        $totalTax = 0;
+
+        // @TODO: components might not have all net/gross/tax fields, fix this (for instance if scope = root)
+        foreach ($components as $component) {
+            $totalNet += $component->getNet();
+            $totalGross += $component->getGross();
+            $totalTax += $component->getTax();
+        }
+
+        $violations = [];
+
+        if ($rootDerivedResult->getNetInMinors() !== $totalNet) {
+            $violations[] = new ViolationDto('net', 'Net amount does not match sum of component net amounts.');
+        }
+
+        if ($rootDerivedResult->getGrossInMinors() !== $totalGross) {
+            $violations[] = new ViolationDto('gross', 'Gross amount does not match sum of component gross amounts.');
+        }
+
+        if ($rootDerivedResult->getTaxInMinors() !== $totalTax) {
+            $violations[] = new ViolationDto('tax', 'Tax amount does not match sum of component tax amounts.');
+        }
+
+        if (empty($violations)) {
+            return;
+        }
+
+        throw new ValidationException($violations);
     }
 
-    private function getPrecision(RelMonDto $dto): int
+    private function getPrecision(RelMonDto $dto): ?int
     {
         if (is_int($dto->precision)) {
             return $dto->precision;
         }
 
-        // @TODO: get precision from net/gross/tax values
-        return 2;
-    }
+        // @TODO: get properly max precision
+        foreach ([$dto->net, $dto->gross, $dto->tax] as $basis) {
+            if (is_int($basis)) {
+                // Can not determine precision from minors.
+                return null;
+            }
 
-    private function getRoundingMode(RelMonDto $dto): RoundingModeEnum
-    {
-        return $dto->roundingMode ? RoundingModeEnum::from($dto->roundingMode) : RoundingModeEnum::HALF_EVEN;
-    }
+            $basis = explode('.', $basis);
 
-    private function getRoundingApplication(RelMonDto $dto): RoundingApplicationEnum
-    {
-        return $dto->roundingApplication
-            ? RoundingApplicationEnum::from($dto->roundingApplication)
-            : RoundingApplicationEnum::TAX;
+            if (count($basis) === 1) {
+                continue;
+            }
+
+            return strlen($basis[1]);
+        }
+
+        return null;
     }
 
     private function getTaxRatePrecision(MonetaryBasisInterface $basis): ?int

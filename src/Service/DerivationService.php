@@ -2,54 +2,29 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Service;
 
-use FromDevelopersForDevelopers\RelMon\Dto\DerivedResultDto;
 use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Exception\DerivationException;
-use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
-use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\MonetaryMinorsBasisInterface;
+use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
+use FromDevelopersForDevelopers\RelMon\ValueObject\ValidatedRelMon;
 
 class DerivationService
 {
-    public function derive(
-        MonetaryBasisInterface  $basis,
-        ProtocolIdentifier      $protocolIdentifier,
-        RoundingModeEnum        $roundingMode,
-        RoundingApplicationEnum $roundingApplication,
-        ?int                    $taxRatePrecision,
-    ): DerivedResultDto
+    public function derive(ValidatedRelMon $relmon, MonetaryMinorsBasisInterface $basis): DerivedResult
     {
-        return match ($protocolIdentifier->getDeterminismLevel()) {
-            DeterminismLevelEnum::DL3 => $this->deriveDeterminismLevelThree(
-                $basis,
-                $roundingMode,
-                $roundingApplication,
-                $taxRatePrecision,
-            ),
-
-            DeterminismLevelEnum::DL2 => $this->deriveDeterminismLevelTwo(
-                $basis,
-                $roundingMode,
-                $roundingApplication,
-                $taxRatePrecision,
-            ),
-
-            DeterminismLevelEnum::DL1 => $this->deriveDeterminismLevelOne(
-                $basis,
-                $roundingMode,
-                $roundingApplication,
-                $taxRatePrecision,
-            ),
+        return match ($relmon->getProtocolIdentifier()->getDeterminismLevel()) {
+            DeterminismLevelEnum::DL3 => $this->deriveDeterminismLevelThree($relmon, $basis),
+            DeterminismLevelEnum::DL2 => $this->deriveDeterminismLevelTwo($relmon, $basis),
+            DeterminismLevelEnum::DL1 => $this->deriveDeterminismLevelOne($relmon, $basis),
         };
     }
 
     private function deriveDeterminismLevelThree(
-        MonetaryBasisInterface  $basis,
-        RoundingModeEnum        $roundingMode,
-        RoundingApplicationEnum $roundingApplication,
-        ?int                    $taxRatePrecision
-    ): DerivedResultDto
+        ValidatedRelMon              $relmon,
+        MonetaryMinorsBasisInterface $basis,
+    ): DerivedResult
     {
         if (
             is_null($basis->getNetInMinors())
@@ -67,19 +42,19 @@ class DerivationService
             throw new DerivationException('Net + tax must be equal to gross.');
         }
 
-        if (!is_null($basis->getTaxRateInMinors()) && !is_null($taxRatePrecision)) {
+        if (!is_null($basis->getTaxRateInMinors()) && !is_null($relmon->getTaxRatePrecision())) {
             $this->validateReconstructedTax(
                 $basis->getNetInMinors(),
                 $basis->getGrossInMinors(),
                 $basis->getTaxInMinors(),
                 $basis->getTaxRateInMinors(),
-                $taxRatePrecision,
-                $roundingMode,
-                $roundingApplication,
+                $relmon->getTaxRatePrecision(),
+                $relmon->getRoundingMode(),
+                $relmon->getRoundingApplication(),
             );
         }
 
-        return new DerivedResultDto(
+        return new DerivedResult(
             $basis->getNetInMinors(),
             $basis->getGrossInMinors(),
             $basis->getTaxInMinors(),
@@ -88,11 +63,9 @@ class DerivationService
     }
 
     private function deriveDeterminismLevelTwo(
-        MonetaryBasisInterface  $basis,
-        RoundingModeEnum        $roundingMode,
-        RoundingApplicationEnum $roundingApplication,
-        int                     $taxRatePrecision,
-    ): DerivedResultDto
+        ValidatedRelMon              $relmon,
+        MonetaryMinorsBasisInterface $basis,
+    ): DerivedResult
     {
         $net = $basis->getNetInMinors();
         $gross = $basis->getGrossInMinors();
@@ -111,20 +84,18 @@ class DerivationService
             $gross,
             $tax = $basis->getGrossInMinors() - $basis->getNetInMinors(),
             $taxRate,
-            $taxRatePrecision,
-            $roundingMode,
-            $roundingApplication,
+            $relmon->getTaxRatePrecision(),
+            $relmon->getRoundingMode(),
+            $relmon->getRoundingApplication(),
         );
 
-        return new DerivedResultDto($net, $gross, $tax, $taxRate);
+        return new DerivedResult($net, $gross, $tax, $taxRate);
     }
 
     private function deriveDeterminismLevelOne(
-        MonetaryBasisInterface  $basis,
-        RoundingModeEnum        $roundingMode,
-        RoundingApplicationEnum $roundingApplication,
-        int                     $taxRatePrecision,
-    ): DerivedResultDto
+        ValidatedRelMon              $relmon,
+        MonetaryMinorsBasisInterface $basis,
+    ): DerivedResult
     {
         $taxRate = $basis->getTaxRateInMinors();
 
@@ -143,22 +114,22 @@ class DerivationService
             throw new DerivationException('Gross must be greater then or equal to net.');
         }
 
-        $taxRateDivisor = 100 * (10 ** $taxRatePrecision);
+        $taxRateDivisor = 100 * (10 ** $relmon->getTaxRatePrecision());
 
-        if ($roundingApplication === RoundingApplicationEnum::TAX) {
+        if ($relmon->getRoundingApplication() === RoundingApplicationEnum::TAX) {
             if (!is_null($net)) {
-                $tax = $roundingMode->round($net * ($taxRate / $taxRateDivisor));
+                $tax = $relmon->getRoundingMode()->round($net * ($taxRate / $taxRateDivisor));
                 $calculatedGross = $net + $tax;
             } else {
-                $tax = $roundingMode->round($gross * $taxRate / ($taxRateDivisor + $taxRate));
+                $tax = $relmon->getRoundingMode()->round($gross * $taxRate / ($taxRateDivisor + $taxRate));
                 $calculatedNet = $gross - $tax;
             }
         } else {
             if (!is_null($net)) {
-                $calculatedGross = $roundingMode->round($net * ($taxRate / $taxRateDivisor + 1));
+                $calculatedGross = $relmon->getRoundingMode()->round($net * ($taxRate / $taxRateDivisor + 1));
                 $tax = $calculatedGross - $net;
             } else {
-                $calculatedNet = $roundingMode->round($gross / ($taxRate / $taxRateDivisor + 1));
+                $calculatedNet = $relmon->getRoundingMode()->round($gross / ($taxRate / $taxRateDivisor + 1));
                 $tax = $gross - $calculatedNet;
             }
         }
@@ -171,7 +142,7 @@ class DerivationService
             throw new DerivationException('Net + tax must be equal to gross.');
         }
 
-        return new DerivedResultDto($calculatedNet, $calculatedGross, $tax, $taxRate);
+        return new DerivedResult($calculatedNet, $calculatedGross, $tax, $taxRate);
     }
 
     private function validateReconstructedTax(

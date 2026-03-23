@@ -3,14 +3,15 @@
 namespace FromDevelopersForDevelopers\RelMon\Service;
 
 use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\MonetaryMinorsBasisInterface;
 
 class MinorsService
 {
     public function toMinors(
         MonetaryBasisInterface $basis,
-        int $precision,
-        ?int $taxRatePrecision = null
-    ): MonetaryBasisInterface
+        int                    $precision,
+        ?int                   $taxRatePrecision = null
+    ): MonetaryMinorsBasisInterface
     {
         // round() is used here to handle float imprecision, e.g. 20.40 * 100 = 2039.9999999999998
         $netInMinors = is_null($basis->getNet()) ? null : (int)round($basis->getNet() * (10 ** $precision));
@@ -23,40 +24,20 @@ class MinorsService
         }
 
         return new class(
-            $basis,
             $netInMinors,
             $grossInMinors,
             $taxInMinors,
-            $taxRateInMinors
-        ) implements MonetaryBasisInterface {
+            $taxRateInMinors,
+            $taxRatePrecision
+        ) implements MonetaryMinorsBasisInterface {
             public function __construct(
-                private MonetaryBasisInterface $basis,
-                private ?int                   $netInMinors,
-                private ?int                   $grossInMinors,
-                private ?int                   $taxInMinors,
-                private ?int                   $taxRateInMinors,
+                private ?int $netInMinors,
+                private ?int $grossInMinors,
+                private ?int $taxInMinors,
+                private ?int $taxRateInMinors,
+                private ?int $taxRatePrecision,
             )
             {
-            }
-
-            public function getNet(): null|string|int
-            {
-                return $this->basis->getNet();
-            }
-
-            public function getGross(): null|string|int
-            {
-                return $this->basis->getGross();
-            }
-
-            public function getTax(): null|string|int
-            {
-                return $this->basis->getTax();
-            }
-
-            public function getTaxRate(): null|string|int
-            {
-                return $this->basis->getTaxRate();
             }
 
             public function getNetInMinors(): ?int
@@ -77,6 +58,11 @@ class MinorsService
             public function getTaxRateInMinors(): ?int
             {
                 return $this->taxRateInMinors;
+            }
+
+            public function getTaxRatePrecision(): ?int
+            {
+                return $this->taxRatePrecision;
             }
         };
     }

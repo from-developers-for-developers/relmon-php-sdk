@@ -5,7 +5,7 @@ namespace FromDevelopersForDevelopers\RelMon\FormatParser;
 use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
 use FromDevelopersForDevelopers\RelMon\Exception\FormatParserWrongInputTypeException;
 
-class UriJsonParser implements FormatParserInterface
+class UriJsonParser extends JsonStringParser implements FormatParserInterface
 {
     public function parse(mixed $input): RelMonDto
     {
@@ -13,18 +13,12 @@ class UriJsonParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('JSON URI notation is expected (relmon-json://...).');
         }
 
-        return new RelMonDto(
-            protocolIdentifier: 'relmon@1.0.0/3',
-            net: null,
-            gross: null,
-            tax: null,
-            taxRate: null,
-            unit: null,
-            precision: null,
-            scope: null,
-            roundingMode: null,
-            roundingApplication: null,
-            components: [],
-        );
+        $input = substr($input, 13);
+
+        if (empty($input)) {
+            throw new FormatParserWrongInputTypeException('JSON URI notation is expected (relmon-json://...).');
+        }
+
+        return parent::parse($input);
     }
 }
