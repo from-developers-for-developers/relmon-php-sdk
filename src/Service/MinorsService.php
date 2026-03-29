@@ -2,16 +2,12 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Service;
 
-use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
-use FromDevelopersForDevelopers\RelMon\MonetaryMinorsBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryMinorsBasisInterface;
 
 class MinorsService
 {
-    public function toMinors(
-        MonetaryBasisInterface $basis,
-        int                    $precision,
-        ?int                   $taxRatePrecision = null
-    ): MonetaryMinorsBasisInterface
+    public function toMinors(MonetaryBasisInterface $basis, int $precision, int $taxRatePrecision): MonetaryMinorsBasisInterface
     {
         // round() is used here to handle float imprecision, e.g. 20.40 * 100 = 2039.9999999999998
         $netInMinors = is_null($basis->getNet()) ? null : (int)round($basis->getNet() * (10 ** $precision));
@@ -19,7 +15,7 @@ class MinorsService
         $taxInMinors = is_null($basis->getTax()) ? null : (int)round($basis->getTax() * (10 ** $precision));
         $taxRateInMinors = null;
 
-        if (!is_null($basis->getTaxRate()) && !is_null($taxRatePrecision)) {
+        if (!is_null($basis->getTaxRate())) {
             $taxRateInMinors = (int)round($basis->getTaxRate() * (10 ** $taxRatePrecision));
         }
 
@@ -31,11 +27,11 @@ class MinorsService
             $taxRatePrecision
         ) implements MonetaryMinorsBasisInterface {
             public function __construct(
-                private ?int $netInMinors,
-                private ?int $grossInMinors,
-                private ?int $taxInMinors,
-                private ?int $taxRateInMinors,
-                private ?int $taxRatePrecision,
+                private readonly ?int $netInMinors,
+                private readonly ?int $grossInMinors,
+                private readonly ?int $taxInMinors,
+                private readonly ?int $taxRateInMinors,
+                private readonly int $taxRatePrecision,
             )
             {
             }
@@ -60,7 +56,7 @@ class MinorsService
                 return $this->taxRateInMinors;
             }
 
-            public function getTaxRatePrecision(): ?int
+            public function getTaxRatePrecision(): int
             {
                 return $this->taxRatePrecision;
             }

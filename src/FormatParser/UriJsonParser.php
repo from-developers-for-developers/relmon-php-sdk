@@ -13,10 +13,16 @@ class UriJsonParser extends JsonStringParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('JSON URI notation is expected (relmon-json://...).');
         }
 
-        $input = substr($input, 13);
+        $input = substr($input, 14);
 
         if (empty($input)) {
             throw new FormatParserWrongInputTypeException('JSON URI notation is expected (relmon-json://...).');
+        }
+
+        $input = base64_decode($input);
+
+        if ($input === false) {
+            throw new FormatParserWrongInputTypeException('Could not decode JSON URI.');
         }
 
         return parent::parse($input);

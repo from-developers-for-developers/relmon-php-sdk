@@ -5,7 +5,7 @@ namespace FromDevelopersForDevelopers\RelMon\Enum;
 enum RoundingModeEnum: string
 {
     case HALF_AWAY_FROM_ZERO = 'haway';
-    case HALF_TOWARDS_ZERO = 'hdown';
+    case HALF_TOWARDS_ZERO = 'hzero';
     case HALF_EVEN = 'heven';
     case UP = 'up';
     case DOWN = 'down';

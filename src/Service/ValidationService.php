@@ -9,7 +9,7 @@ use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
-use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
 
 class ValidationService
 {
@@ -31,6 +31,10 @@ class ValidationService
 
         if (!is_null($dto->roundingApplication) && RoundingApplicationEnum::tryFrom($dto->roundingApplication) === null) {
             $violations[] = new ViolationDto('Invalid rounding application.', 'rounding.application');
+        }
+
+        if (!is_null($dto->scope) && $dto->scope === ScopeEnum::COMPONENT->value && empty($dto->components)) {
+            $violations[] = new ViolationDto('Components are required if the scope is "c".', 'components');
         }
 
         return array_merge(
@@ -72,22 +76,22 @@ class ValidationService
 
         if ($protocolIdentifier->isInMinorsMode() && $types[0] !== 'integer') {
             return [new ViolationDto('Net, gross and tax of root and component levels in minors mode must be of type integer.')];
-        } elseif ($types[0] === 'string') {
-            $decimalAmounts = [];
+        } elseif (!$protocolIdentifier->isInMinorsMode() && $types[0] !== 'string') {
+            return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal.')];
+        } elseif (!$protocolIdentifier->isInMinorsMode()) {
+            $decimalPlaces = [];
 
             foreach ($fields as $field) {
-                if (!preg_match('/^\d+\.(\d)*$/', $field, $matches)) {
+                if (!preg_match('/^-?\d+\.(\d)*$/', $field, $matches)) {
                     return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal.')];
                 }
 
-                $decimalAmounts[] = (int)$matches[1];
+                $decimalPlaces[] = (int)$matches[1];
             }
 
-            if (!is_null($dto->precision) && max($decimalAmounts) > $dto->precision) {
-                return [new ViolationDto('Decimal amount of net, gross and tax values must be exceed the given precision.')];
+            if (!is_null($dto->precision) && max($decimalPlaces) > $dto->precision) {
+                return [new ViolationDto('Decimal places of net, gross and tax values must be exceed the given precision.')];
             }
-        } else {
-            return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal.')];
         }
 
         return [];
@@ -125,7 +129,7 @@ class ValidationService
             }
         }
 
-        if (!is_null($dto->taxRate) && !preg_match('/\d{1,2}\.\d{0,3}/')) {
+        if (!is_null($dto->taxRate) && !preg_match('/^-?\d{1,3}\.\d{0,3}$/', $dto->taxRate)) {
             return [new ViolationDto('Tax rate must be of type decimal with maximum 3 decimal places.', "${violationField}.taxRate")];
         }
 
@@ -136,6 +140,17 @@ class ValidationService
                 if (!empty($violations)) {
                     return $violations;
                 }
+
+                if (
+                    !is_null($component->getTaxRate())
+                    && !is_null($dto->getTaxRate())
+                    && (float)$component->getTaxRate() !== (float)$dto->getTaxRate()
+                ) {
+                    return [new ViolationDto(
+                        'Tax rate on the root level must be the same on the component level.',
+                        "components.{$k}.taxRate",
+                    )];
+                }
             }
         }
 
@@ -145,16 +160,23 @@ class ValidationService
     private function validateGrossAndNet(RelMonDto|MonetaryComponentDto $dto, string $violationField = ''): array
     {
         // Most of the consistency among net/gross/tax is checked in DerivationService.
-        if (!is_null($dto->getGross()) && !is_null($dto->getNet()) && $dto->getGross() < $dto->getNet()) {
-            return [new ViolationDto('Gross must be greater then or equal to net.', "{$violationField}.gross")];
+        if (
+            !is_null($dto->getGross())
+            && !is_null($dto->getNet())
+            && (
+                ($dto->getNet() < 0 && $dto->getGross() > $dto->getNet())
+                || ($dto->getNet() > 0 && $dto->getGross() < $dto->getNet())
+            )
+        ) {
+            return [new ViolationDto('Gross must be greater than or equal to net.', "{$violationField}.gross")];
         }
 
         if (!is_null($dto->getGross()) && !is_null($dto->getTax()) && $dto->getGross() < $dto->getTax()) {
-            return [new ViolationDto('Tax must be less then gross.', "{$violationField}.tax")];
+            return [new ViolationDto('Tax must be less than gross.', "{$violationField}.tax")];
         }
 
         if (!is_null($dto->getNet()) && !is_null($dto->getTax()) && $dto->getNet() < $dto->getTax()) {
-            return [new ViolationDto('Tax must be less then net.', "{$violationField}.tax")];
+            return [new ViolationDto('Tax must be less than net.', "{$violationField}.tax")];
         }
 
         foreach ($dto->components as $k => $component) {

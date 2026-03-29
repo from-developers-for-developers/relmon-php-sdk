@@ -7,7 +7,7 @@ use FromDevelopersForDevelopers\RelMon\Exception\FormatParserNotSupportedExcepti
 
 class FormatParserFactory
 {
-    public function __construct(private FormatParserLocator $formatParserLocator)
+    public function __construct(private readonly FormatParserLocator $formatParserLocator)
     {
     }
 

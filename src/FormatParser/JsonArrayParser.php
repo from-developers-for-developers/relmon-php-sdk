@@ -4,7 +4,9 @@ namespace FromDevelopersForDevelopers\RelMon\FormatParser;
 
 use FromDevelopersForDevelopers\RelMon\Dto\MonetaryComponentDto;
 use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
+use FromDevelopersForDevelopers\RelMon\Dto\ViolationDto;
 use FromDevelopersForDevelopers\RelMon\Exception\FormatParserWrongInputTypeException;
+use FromDevelopersForDevelopers\RelMon\Exception\ValidationException;
 
 class JsonArrayParser implements FormatParserInterface
 {
@@ -14,9 +16,23 @@ class JsonArrayParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('Array is expected.');
         }
 
+        $rounding = $input['rounding'] ?? $input['r'] ?? [];
+
+        if (
+            !empty($rounding)
+            && (
+                empty($rounding['mode'] ?? $rounding['m'])
+                && empty($rounding['application'] ?? $rounding['a'])
+            )
+        ) {
+            throw new ValidationException([
+                new ViolationDto('If rounding is specified, either mode or application are required.', 'rounding'),
+            ]);
+        }
+
         $components = [];
 
-        foreach ($inputs['components'] ?? $input['c'] ?? [] as $component) {
+        foreach ($input['components'] ?? $input['cs'] ?? [] as $component) {
             $components[] = new MonetaryComponentDto(
                 net: $component['net'] ?? $component['n'],
                 gross: $component['gross'] ?? $component['g'],
@@ -36,7 +52,7 @@ class JsonArrayParser implements FormatParserInterface
             precision: $input['precision'] ?? $input['pr'],
             scope: $input['scope'] ?? $input['s'],
             roundingMode: $input['rounding']['mode'] ?? $input['r']['m'],
-            roundingApplication: $input['rounding']['a'] ?? $input['r']['a'],
+            roundingApplication: $input['rounding']['application'] ?? $input['r']['a'],
             components: $components,
         );
     }

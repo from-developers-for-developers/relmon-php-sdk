@@ -1,37 +1,35 @@
 <?php
 
-namespace FromDevelopersForDevelopers\RelMon;
-
-use Decimal\Decimal;
+namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 
 class MonetaryComponent
 {
     public function __construct(
-        private Decimal|int $net,
-        private Decimal|int $gross,
-        private Decimal|int $tax,
-        private ?Decimal    $taxRate = null,
-        private ?string     $comment = null,
+        private string|int $net,
+        private string|int $gross,
+        private string|int $tax,
+        private ?string    $taxRate = null,
+        private ?string    $comment = null,
     )
     {
     }
 
-    public function getNet(): Decimal|int
+    public function getNet(): string|int
     {
         return $this->net;
     }
 
-    public function getGross(): Decimal|int
+    public function getGross(): string|int
     {
         return $this->gross;
     }
 
-    public function getTax(): Decimal|int
+    public function getTax(): string|int
     {
         return $this->tax;
     }
 
-    public function getTaxRate(): ?Decimal
+    public function getTaxRate(): ?string
     {
         return $this->taxRate;
     }

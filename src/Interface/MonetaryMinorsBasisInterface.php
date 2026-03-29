@@ -1,6 +1,6 @@
 <?php
 
-namespace FromDevelopersForDevelopers\RelMon;
+namespace FromDevelopersForDevelopers\RelMon\Interface;
 
 interface MonetaryMinorsBasisInterface
 {
@@ -8,5 +8,5 @@ interface MonetaryMinorsBasisInterface
     public function getGrossInMinors(): ?int;
     public function getTaxInMinors(): ?int;
     public function getTaxRateInMinors(): ?int;
-    public function getTaxRatePrecision(): ?int;
+    public function getTaxRatePrecision(): int;
 }

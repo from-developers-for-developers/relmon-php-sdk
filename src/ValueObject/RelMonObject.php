@@ -1,8 +1,7 @@
 <?php
 
-namespace FromDevelopersForDevelopers\RelMon;
+namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 
-use Decimal\Decimal;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
@@ -10,36 +9,36 @@ use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
 class RelMonObject
 {
     public function __construct(
-        private Decimal|int             $net,
-        private Decimal|int             $gross,
-        private Decimal|int             $tax,
-        private ?Decimal                $taxRate = null,
-        private ?string                 $unit = null,
-        private ?int                    $precision = null,
-        private ScopeEnum               $scope = ScopeEnum::ROOT,
-        private RoundingModeEnum        $roundingMode = RoundingModeEnum::HALF_EVEN,
-        private RoundingApplicationEnum $roundingApplication = RoundingApplicationEnum::TAX,
-        private array                   $components = [],
+        private readonly int                     $net,
+        private readonly int                     $gross,
+        private readonly int                     $tax,
+        private readonly ?int                    $taxRate = null,
+        private readonly ?string                 $unit = null,
+        private readonly ?int                    $precision = null,
+        private readonly ScopeEnum               $scope = ScopeEnum::ROOT,
+        private readonly RoundingModeEnum        $roundingMode = RoundingModeEnum::HALF_EVEN,
+        private readonly RoundingApplicationEnum $roundingApplication = RoundingApplicationEnum::TAX,
+        private readonly array                   $components = [],
     )
     {
     }
 
-    public function getNet(): Decimal|int
+    public function getNet(): int
     {
         return $this->net;
     }
 
-    public function getGross(): Decimal|int
+    public function getGross(): int
     {
         return $this->gross;
     }
 
-    public function getTax(): Decimal|int
+    public function getTax(): int
     {
         return $this->tax;
     }
 
-    public function getTaxRate(): ?Decimal
+    public function getTaxRate(): ?int
     {
         return $this->taxRate;
     }

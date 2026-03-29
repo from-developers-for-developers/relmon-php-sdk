@@ -12,21 +12,20 @@ use FromDevelopersForDevelopers\RelMon\Exception\FormatNotSupportedException;
 use FromDevelopersForDevelopers\RelMon\Exception\ProtocolIdentifierInvalidException;
 use FromDevelopersForDevelopers\RelMon\Exception\ValidationException;
 use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserFactory;
-use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
-use FromDevelopersForDevelopers\RelMon\MonetaryComponent;
-use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
-use FromDevelopersForDevelopers\RelMon\RelMonObject;
-use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\ValueObject\MonetaryComponent;
+use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\ValueObject\RelMonObject;
 use FromDevelopersForDevelopers\RelMon\ValueObject\ValidatedMonetaryComponent;
 use FromDevelopersForDevelopers\RelMon\ValueObject\ValidatedRelMon;
 
 class RelMonService
 {
     public function __construct(
-        private FormatParserFactory $formatParserFactory,
-        private ValidationService   $validationService,
-        private MinorsService       $minorsService,
-        private DerivationService   $derivationService,
+        private readonly FormatParserFactory $formatParserFactory,
+        private readonly ValidationService   $validationService,
+        private readonly MinorsService       $minorsService,
+        private readonly DerivationService   $derivationService,
     )
     {
     }
@@ -49,27 +48,41 @@ class RelMonService
 
             $components = [];
 
-            if ($dto->getScope() === ScopeEnum::COMPONENT) {
-                foreach ($dto->getComponents() as $component) {
+            foreach ($dto->getComponents() as $component) {
+                $net = $component->getNetInMinors();
+                $gross = $component->getGrossInMinors();
+                $tax = $component->getTaxInMinors();
+                $taxRate = $component->getTaxRateInMinors();
+
+                if ($dto->getScope() === ScopeEnum::COMPONENT) {
                     $derived = $this->derivationService->derive($dto, $component);
-                    $components[] = new MonetaryComponent(
-                        net: $derived->getNetInMinors(),
-                        gross: $derived->getGrossInMinors(),
-                        tax: $derived->getTaxInMinors(),
-                        taxRate: $derived->getTaxRateInMinors(),
-                        comment: $component->getComment(),
-                    );
+                    $net = $derived->getNetInMinors();
+                    $gross = $derived->getGrossInMinors();
+                    $tax = $derived->getTaxInMinors();
+                    $taxRate = $derived->getTaxRateInMinors();
                 }
+
+                $components[] = new MonetaryComponent($net, $gross, $tax, $taxRate, $component->getComment());
             }
 
-            $derived = $this->derivationService->derive($dto, $dto);
-            $this->compareAmounts($derived, $components);
+            $net = $dto->getNetInMinors();
+            $gross = $dto->getGrossInMinors();
+            $tax = $dto->getTaxInMinors();
+            $taxRate = $dto->getTaxRateInMinors();
 
-            return new RelMonObject(
-                net: $derived->getNetInMinors(),
-                gross: $derived->getGrossInMinors(),
-                tax: $derived->getTaxInMinors(),
-                taxRate: $derived->getTaxRateInMinors(),
+            if ($dto->getScope() === ScopeEnum::ROOT) {
+                $derived = $this->derivationService->derive($dto, $dto);
+                $net = $derived->getNetInMinors();
+                $gross = $derived->getGrossInMinors();
+                $tax = $derived->getTaxInMinors();
+                $taxRate = $derived->getTaxRateInMinors();
+            }
+
+            $relmon = new RelMonObject(
+                net: $net,
+                gross: $gross,
+                tax: $tax,
+                taxRate: $taxRate,
                 unit: $dto->getUnit(),
                 precision: $dto->getPrecision(),
                 scope: $dto->getScope(),
@@ -77,10 +90,12 @@ class RelMonService
                 roundingApplication: $dto->getRoundingApplication(),
                 components: $components,
             );
+
+            $this->compareAmounts($relmon);
+
+            return $relmon;
         } catch (ProtocolIdentifierInvalidException $e) {
             throw new ValidationException([new ViolationDto($e->getMessage(), 'protocolIdentifier')]);
-        } catch (\Throwable $e) {
-            // @TODO
         }
     }
 
@@ -92,9 +107,9 @@ class RelMonService
 
         if (is_array($input)) {
             return FormatEnum::JSON_ARRAY;
-        } elseif ($input instanceof \SimpleXMLElement) {
+        } elseif (class_exists('\SimpleXMLElement') && $input instanceof \SimpleXMLElement) {
             return FormatEnum::XML_SIMPLE_XML;
-        } elseif ($input instanceof \DOMDocument) {
+        } elseif (class_exists('\DOMDocument') && $input instanceof \DOMDocument) {
             return FormatEnum::XML_DOM_DOCUMENT;
         } elseif (is_string($input)) {
             $input = ltrim($input);
@@ -130,9 +145,9 @@ class RelMonService
         $components = [];
 
         foreach ($dto->components as $component) {
+            $componentTaxRatePrecision = $this->getTaxRatePrecision($component, $taxRatePrecision);
             $components[] = new ValidatedMonetaryComponent(
-                minorsBasis: $this->minorsService->toMinors($component, $precision),
-                taxRatePrecision: $taxRatePrecision ?? $this->getTaxRatePrecision($component),
+                minorsBasis: $this->minorsService->toMinors($component, $precision, $componentTaxRatePrecision),
                 comment: $component->getComment(),
             );
         }
@@ -142,7 +157,7 @@ class RelMonService
             scope: ScopeEnum::tryFrom((string)$dto->scope) ?? ScopeEnum::ROOT,
             roundingMode: RoundingModeEnum::tryFrom((string)$dto->roundingMode) ?? RoundingModeEnum::HALF_EVEN,
             roundingApplication: RoundingApplicationEnum::tryFrom($dto->roundingApplication) ?? RoundingApplicationEnum::TAX,
-            minorsBasis: $this->minorsService->toMinors($dto, $precision),
+            minorsBasis: $this->minorsService->toMinors($dto, $precision, $taxRatePrecision),
             unit: $dto->unit,
             precision: $precision,
             taxRatePrecision: $taxRatePrecision,
@@ -150,9 +165,9 @@ class RelMonService
         );
     }
 
-    private function compareAmounts(DerivedResult $rootDerivedResult, array $components): void
+    private function compareAmounts(RelMonObject $relmon): void
     {
-        if (empty($components)) {
+        if (empty($relmon->getComponents())) {
             return;
         }
 
@@ -161,7 +176,7 @@ class RelMonService
         $totalTax = 0;
 
         // @TODO: components might not have all net/gross/tax fields, fix this (for instance if scope = root)
-        foreach ($components as $component) {
+        foreach ($relmon->getComponents() as $component) {
             $totalNet += $component->getNet();
             $totalGross += $component->getGross();
             $totalTax += $component->getTax();
@@ -169,16 +184,16 @@ class RelMonService
 
         $violations = [];
 
-        if ($rootDerivedResult->getNetInMinors() !== $totalNet) {
-            $violations[] = new ViolationDto('net', 'Net amount does not match sum of component net amounts.');
+        if ($relmon->getNet() !== $totalNet) {
+            $violations[] = new ViolationDto('Net amount does not match sum of component net amounts.', 'net');
         }
 
-        if ($rootDerivedResult->getGrossInMinors() !== $totalGross) {
-            $violations[] = new ViolationDto('gross', 'Gross amount does not match sum of component gross amounts.');
+        if ($relmon->getGross() !== $totalGross) {
+            $violations[] = new ViolationDto('Gross amount does not match sum of component gross amounts.', 'gross');
         }
 
-        if ($rootDerivedResult->getTaxInMinors() !== $totalTax) {
-            $violations[] = new ViolationDto('tax', 'Tax amount does not match sum of component tax amounts.');
+        if ($relmon->getTax() !== $totalTax) {
+            $violations[] = new ViolationDto('Tax amount does not match sum of component tax amounts.', 'tax');
         }
 
         if (empty($violations)) {
@@ -188,7 +203,7 @@ class RelMonService
         throw new ValidationException($violations);
     }
 
-    private function getPrecision(RelMonDto $dto): ?int
+    private function getPrecision(RelMonDto $dto): int
     {
         if (is_int($dto->precision)) {
             return $dto->precision;
@@ -197,8 +212,8 @@ class RelMonService
         // @TODO: get properly max precision
         foreach ([$dto->net, $dto->gross, $dto->tax] as $basis) {
             if (is_int($basis)) {
-                // Can not determine precision from minors.
-                return null;
+                // Cannot determine precision from minors.
+                return 0;
             }
 
             $basis = explode('.', $basis);
@@ -210,19 +225,19 @@ class RelMonService
             return strlen($basis[1]);
         }
 
-        return null;
+        return 0;
     }
 
-    private function getTaxRatePrecision(MonetaryBasisInterface $basis): ?int
+    private function getTaxRatePrecision(MonetaryBasisInterface $basis, int $default = 0): int
     {
         if (is_null($basis->getTaxRate())) {
-            return null;
+            return $default;
         }
 
         $taxRate = (string)$basis->getTaxRate();
 
         if (!str_contains($taxRate, '.')) {
-            return 0;
+            return $default;
         }
 
         $taxRate = explode('.', $taxRate);

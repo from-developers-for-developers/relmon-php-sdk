@@ -10,7 +10,7 @@ class ValidationException extends RelMonException
     #[Pure]
     public function __construct(
         /** @var ViolationDto[] */
-        private array $violations,
+        private readonly array $violations,
         string $message = "",
         int $code = 0,
         ?\Throwable $previous = null

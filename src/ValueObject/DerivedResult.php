@@ -2,7 +2,7 @@
 
 namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 
-use FromDevelopersForDevelopers\RelMon\MonetaryMinorsBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryMinorsBasisInterface;
 
 /** @internal */
 class DerivedResult implements MonetaryMinorsBasisInterface
@@ -12,7 +12,7 @@ class DerivedResult implements MonetaryMinorsBasisInterface
         private int  $gross,
         private int  $tax,
         private ?int $taxRate = null,
-        private ?int $taxRatePrecision = null,
+        private readonly int  $taxRatePrecision,
     )
     {
     }
@@ -37,7 +37,7 @@ class DerivedResult implements MonetaryMinorsBasisInterface
         return $this->taxRate;
     }
 
-    public function getTaxRatePrecision(): ?int
+    public function getTaxRatePrecision(): int
     {
         return $this->taxRatePrecision;
     }

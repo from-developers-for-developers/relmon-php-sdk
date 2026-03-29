@@ -2,15 +2,14 @@
 
 namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 
-use FromDevelopersForDevelopers\RelMon\MonetaryMinorsBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryMinorsBasisInterface;
 
 /** @internal */
 class ValidatedMonetaryComponent implements MonetaryMinorsBasisInterface
 {
     public function __construct(
-        private MonetaryMinorsBasisInterface $minorsBasis,
-        private ?int                         $taxRatePrecision = null,
-        private ?string                      $comment = null,
+        private readonly MonetaryMinorsBasisInterface $minorsBasis,
+        private readonly ?string                      $comment = null,
     )
     {
     }
@@ -35,9 +34,9 @@ class ValidatedMonetaryComponent implements MonetaryMinorsBasisInterface
         return $this->minorsBasis->getTaxRateInMinors();
     }
 
-    public function getTaxRatePrecision(): ?int
+    public function getTaxRatePrecision(): int
     {
-        return $this->taxRatePrecision;
+        return $this->minorsBasis->getTaxRatePrecision();
     }
 
     public function getComment(): ?string

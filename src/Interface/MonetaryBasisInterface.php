@@ -1,6 +1,6 @@
 <?php
 
-namespace FromDevelopersForDevelopers\RelMon;
+namespace FromDevelopersForDevelopers\RelMon\Interface;
 
 interface MonetaryBasisInterface
 {

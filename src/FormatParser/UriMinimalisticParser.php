@@ -13,7 +13,7 @@ class UriMinimalisticParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('Minimalistic URI notation is expected (relmon-min://...).');
         }
 
-        $input = substr($input, 12);
+        $input = substr($input, 13);
 
         if (empty($input)) {
             throw new FormatParserWrongInputTypeException('Minimalistic URI notation is expected (relmon-min://...).');
@@ -25,6 +25,6 @@ class UriMinimalisticParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('Minimalistic URI notation expects 4 parameters separated by semicolon.');
         }
 
-        return new RelMonDto(protocolIdentifier: $input[0], net: $input[1], gross: $input[2], tax: $input[3]);
+        return new RelMonDto(protocolIdentifier: "relmon@{$input[0]}", net: $input[1], gross: $input[2], tax: $input[3]);
     }
 }

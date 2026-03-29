@@ -2,7 +2,7 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Dto;
 
-use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
 
 /** @internal */
 class MonetaryComponentDto implements MonetaryBasisInterface

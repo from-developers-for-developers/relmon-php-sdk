@@ -5,24 +5,23 @@ namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
-use FromDevelopersForDevelopers\RelMon\MonetaryMinorsBasisInterface;
-use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryMinorsBasisInterface;
 
 /** @internal */
 class ValidatedRelMon implements MonetaryMinorsBasisInterface
 {
     public function __construct(
-        private ProtocolIdentifier           $protocolIdentifier,
-        private ScopeEnum                    $scope,
-        private RoundingModeEnum             $roundingMode,
-        private RoundingApplicationEnum      $roundingApplication,
-        private MonetaryMinorsBasisInterface $minorsBasis,
-        private ?string                      $unit = null,
-        private ?int                         $precision = null,
-        private ?int                         $taxRatePrecision = null,
+        private readonly ProtocolIdentifier           $protocolIdentifier,
+        private readonly ScopeEnum                    $scope,
+        private readonly RoundingModeEnum             $roundingMode,
+        private readonly RoundingApplicationEnum      $roundingApplication,
+        private readonly MonetaryMinorsBasisInterface $minorsBasis,
+        private readonly ?string                      $unit = null,
+        private readonly ?int                         $precision = null,
+        private readonly int                          $taxRatePrecision, // @TODO move position
 
         /** @var ValidatedMonetaryComponent[] */
-        private array                        $components = [],
+        private readonly array                        $components = [],
     )
     {
     }
@@ -77,7 +76,7 @@ class ValidatedRelMon implements MonetaryMinorsBasisInterface
         return $this->precision;
     }
 
-    public function getTaxRatePrecision(): ?int
+    public function getTaxRatePrecision(): int
     {
         return $this->taxRatePrecision;
     }

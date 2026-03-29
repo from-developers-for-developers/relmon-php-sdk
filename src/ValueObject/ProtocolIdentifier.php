@@ -1,6 +1,6 @@
 <?php
 
-namespace FromDevelopersForDevelopers\RelMon;
+namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 
 use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
 use FromDevelopersForDevelopers\RelMon\Exception\ProtocolIdentifierInvalidException;
@@ -18,15 +18,19 @@ class ProtocolIdentifier
     public function __construct(string $protocolIdentifier)
     {
         if (isset(self::$cachedProtocolIdentifiers[$protocolIdentifier])) {
-            return self::$cachedProtocolIdentifiers[$protocolIdentifier];
+            $this->version = self::$cachedProtocolIdentifiers[$protocolIdentifier]->getVersion();
+            $this->determinismLevel = self::$cachedProtocolIdentifiers[$protocolIdentifier]->getDeterminismLevel();
+            $this->inCompactMode = self::$cachedProtocolIdentifiers[$protocolIdentifier]->isInCompactMode();
+            $this->inMinorsMode = self::$cachedProtocolIdentifiers[$protocolIdentifier]->isInCompactMode();
+
+            return;
         }
 
         if (!str_starts_with($protocolIdentifier, 'relmon@')) {
             throw new ProtocolIdentifierInvalidException('ProtocolIdentifier should start with "relmon@".');
         }
 
-        $protocolIdentifier = substr($protocolIdentifier, 7);
-        list($version, $protocolOptions) = explode('/', $protocolIdentifier);
+        list($version, $protocolOptions) = explode('/', substr($protocolIdentifier, 7));
 
         // @TODO: assert version format
         $this->version = $version;
@@ -42,7 +46,7 @@ class ProtocolIdentifier
         }
 
         $determinismLevel = $protocolOptions[0];
-        $modes = $protocolOptions[1] ?? [];
+        $modes = !empty($protocolOptions[1]) ? explode('.', $protocolOptions[1]) : [];
 
         $this->determinismLevel = DeterminismLevelEnum::from((int)$determinismLevel);
 

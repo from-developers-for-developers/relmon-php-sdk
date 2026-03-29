@@ -6,7 +6,7 @@ use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Exception\DerivationException;
-use FromDevelopersForDevelopers\RelMon\MonetaryMinorsBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryMinorsBasisInterface;
 use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
 use FromDevelopersForDevelopers\RelMon\ValueObject\ValidatedRelMon;
 
@@ -27,14 +27,19 @@ class DerivationService
     ): DerivedResult
     {
         if (
-            is_null($basis->getNetInMinors())
-            || is_null($basis->getGrossInMinors())
-            || is_null($basis->getTaxInMinors())
+            is_null($basis->getTaxInMinors())
+            || (is_null($basis->getNetInMinors()) && is_null($basis->getGrossInMinors()))
         ) {
-            throw new DerivationException('Net, gross and tax must be specified for DL3.');
+            throw new DerivationException('Net + tax and/or gross + tax must be specified for DL3.');
         }
 
-        if ($basis->getGrossInMinors() < $basis->getNetInMinors()) {
+        if (
+            !is_null($basis->getNetInMinors()) && !is_null($basis->getGrossInMinors())
+            && (
+                ($basis->getNetInMinors() < 0 && $basis->getGrossInMinors() > $basis->getNetInMinors())
+                || ($basis->getNetInMinors() > 0 && $basis->getGrossInMinors() < $basis->getNetInMinors())
+            )
+        ) {
             throw new DerivationException('Gross must be greater then or equal to net.');
         }
 
@@ -42,7 +47,7 @@ class DerivationService
             throw new DerivationException('Net + tax must be equal to gross.');
         }
 
-        if (!is_null($basis->getTaxRateInMinors()) && !is_null($relmon->getTaxRatePrecision())) {
+        if (!is_null($basis->getTaxRateInMinors())) {
             $this->validateReconstructedTax(
                 $basis->getNetInMinors(),
                 $basis->getGrossInMinors(),
@@ -58,7 +63,8 @@ class DerivationService
             $basis->getNetInMinors(),
             $basis->getGrossInMinors(),
             $basis->getTaxInMinors(),
-            $basis->getTaxRateInMinors()
+            $basis->getTaxRateInMinors(),
+            $basis->getTaxRatePrecision(),
         );
     }
 
@@ -89,7 +95,7 @@ class DerivationService
             $relmon->getRoundingApplication(),
         );
 
-        return new DerivedResult($net, $gross, $tax, $taxRate);
+        return new DerivedResult($net, $gross, $tax, $taxRate, $basis->getTaxRatePrecision(),);
     }
 
     private function deriveDeterminismLevelOne(
@@ -114,7 +120,7 @@ class DerivationService
             throw new DerivationException('Gross must be greater then or equal to net.');
         }
 
-        $taxRateDivisor = 100 * (10 ** $relmon->getTaxRatePrecision());
+        $taxRateDivisor = 100 * (10 ** $basis->getTaxRatePrecision());
 
         if ($relmon->getRoundingApplication() === RoundingApplicationEnum::TAX) {
             if (!is_null($net)) {
@@ -142,7 +148,7 @@ class DerivationService
             throw new DerivationException('Net + tax must be equal to gross.');
         }
 
-        return new DerivedResult($calculatedNet, $calculatedGross, $tax, $taxRate);
+        return new DerivedResult($calculatedNet, $calculatedGross, $tax, $taxRate, $basis->getTaxRatePrecision());
     }
 
     private function validateReconstructedTax(
