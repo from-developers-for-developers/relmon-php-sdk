@@ -3,7 +3,6 @@
 namespace FromDevelopersForDevelopers\RelMon\Tests\Dto;
 
 use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class DerivedResultTest extends TestCase
@@ -16,7 +15,9 @@ class DerivedResultTest extends TestCase
         ];
     }
 
-    #[DataProvider('constructDataProvider')]
+    /**
+     * @dataProvider constructDataProvider
+     */
     public function test_construct(int $net, int $gross, int $tax, int $precision, int $taxRatePrecision, ?int $taxRate = null)
     {
         $dto = new DerivedResult($net, $gross, $tax, $precision, $taxRatePrecision, $taxRate);

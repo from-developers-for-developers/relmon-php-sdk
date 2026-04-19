@@ -3,7 +3,6 @@
 namespace FromDevelopersForDevelopers\RelMon\Tests\Dto;
 
 use FromDevelopersForDevelopers\RelMon\Dto\MonetaryComponentDto;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class MonetaryComponentDtoTest extends TestCase
@@ -17,7 +16,9 @@ class MonetaryComponentDtoTest extends TestCase
         ];
     }
 
-    #[DataProvider('constructDataProvider')]
+    /**
+     * @dataProvider constructDataProvider
+     */
     public function test_construct(?int $net, ?int $gross, ?int $tax, ?int $taxRate = null, ?string $comment = null)
     {
         $dto = new MonetaryComponentDto($net, $gross, $tax, $taxRate, $comment);

@@ -12,7 +12,6 @@ use FromDevelopersForDevelopers\RelMon\Service\DerivationService;
 use FromDevelopersForDevelopers\RelMon\Tests\DummyMonetaryBasis;
 use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
 use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class DerivationServiceTest extends TestCase
@@ -114,7 +113,9 @@ class DerivationServiceTest extends TestCase
         ];
     }
 
-    #[DataProvider('deriveDataProvider')]
+    /**
+     * @dataProvider deriveDataProvider
+     */
     public function test_derive(
         MonetaryBasisInterface  $basis,
         string                  $protocolIdentifier,

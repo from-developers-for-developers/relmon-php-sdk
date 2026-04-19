@@ -3,7 +3,6 @@
 namespace FromDevelopersForDevelopers\RelMon\Tests\Enum;
 
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class RoundingModeTest extends TestCase
@@ -46,7 +45,9 @@ class RoundingModeTest extends TestCase
         ];
     }
 
-    #[DataProvider('roundDataProvider')]
+    /**
+     * @dataProvider roundDataProvider
+     */
     public function test_round(string $mode, float|int $input, int $expected): void
     {
         $this->assertSame($expected, RoundingMode::round($mode, $input));

@@ -6,7 +6,6 @@ use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
 use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
 use FromDevelopersForDevelopers\RelMon\Service\MinorsService;
 use FromDevelopersForDevelopers\RelMon\Tests\DummyMonetaryBasis;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class MinorsServiceTest extends TestCase
@@ -21,7 +20,8 @@ class MinorsServiceTest extends TestCase
                 new DummyMonetaryBasis(10000, 12100, 2100, 2100, 2, 2),
             ],
             [
-                new RelMonDto('relmon@1.0.0/3', '20.40', '27.20', '6.80', '33.345'), // 20.40 * 100 = 2039.9999999999998
+                // This is a good example, because 20.40 * 100 = 2039.9999999999998
+                new RelMonDto('relmon@1.0.0/3', '20.40', '27.20', '6.80', '33.345'),
                 2,
                 3,
                 new DummyMonetaryBasis(2040, 2720, 680, 33345, 2, 3),
@@ -29,7 +29,9 @@ class MinorsServiceTest extends TestCase
         ];
     }
 
-    #[DataProvider('toMinorsDataProvider')]
+    /**
+     * @dataProvider toMinorsDataProvider
+     */
     public function test_toMinors(
         RelMonDto $dto,
         int $precision,
