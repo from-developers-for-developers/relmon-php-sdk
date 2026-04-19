@@ -3,15 +3,23 @@
 namespace FromDevelopersForDevelopers\RelMon\Tests\FormatParser;
 
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
 use FromDevelopersForDevelopers\RelMon\Enum\Scope;
+use FromDevelopersForDevelopers\RelMon\Exception\ValidationException;
 use FromDevelopersForDevelopers\RelMon\FormatParser\JsonArrayParser;
 use PHPUnit\Framework\TestCase;
 
 class JsonArrayParserTest extends TestCase
 {
+    private JsonArrayParser $parser;
+
+    protected function setUp(): void
+    {
+        $this->parser = new JsonArrayParser();
+    }
+
     public function testParseValidArray(): void
     {
-        $parser = new JsonArrayParser();
         $input = [
             'protocol' => '1.0',
             'net' => '100.00',
@@ -36,7 +44,7 @@ class JsonArrayParserTest extends TestCase
             ]
         ];
 
-        $dto = $parser->parse($input);
+        $dto = $this->parser->parse($input);
 
         $this->assertEquals('1.0', $dto->protocolIdentifier);
         $this->assertEquals('100.00', $dto->net);
@@ -60,7 +68,6 @@ class JsonArrayParserTest extends TestCase
 
     public function testParseCompactNotationArray(): void
     {
-        $parser = new JsonArrayParser();
         $input = [
             'p' => '1.0',
             'n' => '100.00',
@@ -85,7 +92,7 @@ class JsonArrayParserTest extends TestCase
             ]
         ];
 
-        $dto = $parser->parse($input);
+        $dto = $this->parser->parse($input);
 
         $this->assertEquals('1.0', $dto->protocolIdentifier);
         $this->assertEquals('100.00', $dto->net);
@@ -107,4 +114,31 @@ class JsonArrayParserTest extends TestCase
         $this->assertEquals('Test component', $component->getComment());
     }
 
+    public function testInvalidRoundingModeThrowsException(): void
+    {
+        $input = [
+            'rounding' => ['mode' => 'invalid', 'application' => RoundingApplication::TAX]
+        ];
+
+        $this->expectException(ValidationException::class);
+        $this->parser->parse($input);
+    }
+
+    public function testInvalidRoundingApplicationThrowsException(): void
+    {
+        $input = [
+            'rounding' => ['mode' => RoundingMode::UP, 'application' => 'invalid']
+        ];
+
+        $this->expectException(ValidationException::class);
+        $this->parser->parse($input);
+    }
+
+    public function testInvalidScopeThrowsException(): void
+    {
+        $input = ['scope' => 'invalid'];
+
+        $this->expectException(ValidationException::class);
+        $this->parser->parse($input);
+    }
 }
