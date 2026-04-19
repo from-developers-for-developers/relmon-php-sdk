@@ -3,7 +3,7 @@
 Official PHP SDK for [RelMon protocol](https://github.com/from-developers-for-developers/relmon-protocol).
 
 ![Tests](https://github.com/from-developers-for-developers/relmon-php-sdk/actions/workflows/tests.yml/badge.svg)
-[![codecov](https://codecov.io/gh/from-developers-for-developers/relmon-php-sdk/branch/master/graph/badge.svg?token=YOUR_TOKEN)](https://codecov.io/gh/from-developers-for-developers/relmon-php-sdk)
+[![codecov](https://codecov.io/gh/from-developers-for-developers/relmon-php-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/from-developers-for-developers/relmon-php-sdk)
 
 ## Requirements
 - PHP >= 8.0
