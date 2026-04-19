@@ -27,10 +27,18 @@ jobs:
       with:
         php-version: ${{ matrix.php-versions }}
         extensions: mbstring, xml
-        coverage: none
+        coverage: pcov
 
     - name: Install dependencies
       run: composer update --prefer-dist --no-progress
 
     - name: Run test suite
-      run: vendor/bin/phpunit tests
+      run: vendor/bin/phpunit tests --coverage-clover coverage.xml
+
+    - name: Upload coverage to Codecov
+      if: matrix.php-versions == '8.3'
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        fail_ci_if_error: true
