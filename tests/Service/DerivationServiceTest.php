@@ -2,14 +2,16 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Tests\Service;
 
-use FromDevelopersForDevelopers\RelMon\Dto\DerivedResultDto;
-use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
-use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
+use FromDevelopersForDevelopers\RelMon\Dto\CanonicalRelMonDto;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
+use FromDevelopersForDevelopers\RelMon\Enum\Scope;
 use FromDevelopersForDevelopers\RelMon\Exception\DerivationException;
-use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
-use FromDevelopersForDevelopers\RelMon\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
 use FromDevelopersForDevelopers\RelMon\Service\DerivationService;
 use FromDevelopersForDevelopers\RelMon\Tests\DummyMonetaryBasis;
+use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
+use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -21,54 +23,45 @@ class DerivationServiceTest extends TestCase
             // DL3
             [
                 new DummyMonetaryBasis(),
-                new ProtocolIdentifier('relmon@1.0.0/3'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/3',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 2,
                 null,
-                new DerivationException('Net, gross and tax must be specified for DL3.'),
+                new DerivationException('Net + tax and/or gross + tax must be specified for DL3.'),
             ],
             [
                 new DummyMonetaryBasis(netInMinors: 10000),
-                new ProtocolIdentifier('relmon@1.0.0/3'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/3',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 2,
                 null,
-                new DerivationException('Net, gross and tax must be specified for DL3.'),
+                new DerivationException('Net + tax and/or gross + tax must be specified for DL3.'),
             ],
             [
                 new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100),
-                new ProtocolIdentifier('relmon@1.0.0/3'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/3',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 2,
                 null,
-                new DerivationException('Net, gross and tax must be specified for DL3.'),
-            ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 9999, taxInMinors: 2100, taxRateInMinors: 2100),
-                new ProtocolIdentifier('relmon@1.0.0/3'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
-                null,
-                new DerivationException('Gross must be greater then or equal to net.')
+                new DerivationException('Net + tax and/or gross + tax must be specified for DL3.'),
             ],
             [
                 new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100, taxInMinors: 2100, taxRateInMinors: 21000),
-                new ProtocolIdentifier('relmon@1.0.0/3'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/3',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 3,
-                new DerivedResultDto(10000, 12100, 2100, 21000),
+                new DerivedResult(10000, 12100, 2100, 2, 3, 21000),
             ],
             [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100, taxInMinors: 2100, taxRateInMinors: 2101),
-                new ProtocolIdentifier('relmon@1.0.0/3'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
+                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100, taxInMinors: 2100, taxRateInMinors: 21010),
+                'relmon@1.0.0/3',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
+                3,
                 null,
                 new DerivationException('The reconstruction of the tax amount has failed.'),
             ],
@@ -76,157 +69,88 @@ class DerivationServiceTest extends TestCase
             // DL2
             [
                 new DummyMonetaryBasis(),
-                new ProtocolIdentifier('relmon@1.0.0/2'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/2',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 2,
                 null,
                 new DerivationException('Net, gross and tax rate must be specified for DL2.'),
-            ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000),
-                new ProtocolIdentifier('relmon@1.0.0/2'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
-                null,
-                new DerivationException('Net, gross and tax rate must be specified for DL2.'),
-            ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100),
-                new ProtocolIdentifier('relmon@1.0.0/2'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
-                null,
-                new DerivationException('Net, gross and tax rate must be specified for DL2.'),
-            ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 9999, taxRateInMinors: 2100),
-                new ProtocolIdentifier('relmon@1.0.0/2'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
-                null,
-                new DerivationException('Gross must be greater then or equal to net.')
             ],
             [
                 new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100, taxRateInMinors: 21000),
-                new ProtocolIdentifier('relmon@1.0.0/2'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/2',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 3,
-                new DerivedResultDto(10000, 12100, 2100, 21000),
-            ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12101, taxRateInMinors: 21000),
-                new ProtocolIdentifier('relmon@1.0.0/2'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                3,
-                null,
-                new DerivationException('The reconstruction of the tax amount has failed.')
+                new DerivedResult(10000, 12100, 2100, 2, 3, 21000),
             ],
 
             // DL1
             [
                 new DummyMonetaryBasis(netInMinors: 10000),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/1',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 2,
                 null,
                 new DerivationException('Tax rate must be specified for DL1.')
             ],
             [
-                new DummyMonetaryBasis(taxRateInMinors: 2100),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
-                null,
-                new DerivationException('Net or gross must be specified for DL1.')
-            ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 9999, taxRateInMinors: 2100),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
-                null,
-                new DerivationException('Gross must be greater then or equal to net.')
-            ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12101, taxRateInMinors: 2100),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                2,
-                null,
-                new DerivationException('Calculated net/gross must be equal to the explicitly defined net/gross.')
-            ],
-            [
                 new DummyMonetaryBasis(netInMinors: 10000, taxRateInMinors: 2100),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/1',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 2,
-                new DerivedResultDto(10000, 12100, 2100, 2100),
+                new DerivedResult(10000, 12100, 2100, 2, 2, 2100),
             ],
             [
                 new DummyMonetaryBasis(grossInMinors: 12100, taxRateInMinors: 2100),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
+                'relmon@1.0.0/1',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
                 2,
-                new DerivedResultDto(10000, 12100, 2100, 2100),
+                new DerivedResult(10000, 12100, 2100, 2, 2, 2100),
             ],
-            [
-                new DummyMonetaryBasis(netInMinors: 10000, taxRateInMinors: 21000),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                3,
-                new DerivedResultDto(10000, 12100, 2100, 21000),
-            ],
-            [
-                new DummyMonetaryBasis(grossInMinors: 12100, taxRateInMinors: 21000),
-                new ProtocolIdentifier('relmon@1.0.0/1'),
-                RoundingModeEnum::HALF_EVEN,
-                RoundingApplicationEnum::TAX,
-                3,
-                new DerivedResultDto(10000, 12100, 2100, 21000),
-            ],
-
-            // @TODO: add tests for different rounding modes/applications
         ];
     }
 
     #[DataProvider('deriveDataProvider')]
     public function test_derive(
         MonetaryBasisInterface  $basis,
-        ProtocolIdentifier      $protocolIdentifier,
-        RoundingModeEnum        $roundingMode,
-        RoundingApplicationEnum $roundingApplication,
-        ?int                    $taxRatePrecision,
-        ?DerivedResultDto       $expectedResult,
-        ?DerivationException    $exception = null
+        string                  $protocolIdentifier,
+        string                  $roundingMode,
+        string                  $roundingApplication,
+        int                     $taxRatePrecision,
+        ?DerivedResult          $expectedResult,
+        ?\Exception             $exception = null
     )
     {
         $service = new DerivationService();
+        $pi = new ProtocolIdentifier($protocolIdentifier);
+
+        $relmon = new CanonicalRelMonDto(
+            protocolIdentifier: $pi,
+            scope: Scope::ROOT,
+            roundingMode: $roundingMode,
+            roundingApplication: $roundingApplication,
+            basis: $basis,
+            precision: 2,
+            taxRatePrecision: $taxRatePrecision,
+            unit: 'EUR'
+        );
 
         if ($exception) {
             $this->expectException($exception::class);
             $this->expectExceptionMessage($exception->getMessage());
         }
 
-        $result = $service->derive($basis, $protocolIdentifier, $roundingMode, $roundingApplication, $taxRatePrecision);
+        $result = $service->derive($relmon, $basis);
 
         if ($expectedResult) {
-            $this->assertSame($expectedResult->getNet(), $result->getNet());
-            $this->assertSame($expectedResult->getGross(), $result->getGross());
-            $this->assertSame($expectedResult->getTax(), $result->getTax());
-            $this->assertSame($expectedResult->getTaxRate(), $result->getTaxRate());
+            $this->assertSame($expectedResult->getNetInMinors(), $result->getNetInMinors());
+            $this->assertSame($expectedResult->getGrossInMinors(), $result->getGrossInMinors());
+            $this->assertSame($expectedResult->getTaxInMinors(), $result->getTaxInMinors());
+            $this->assertSame($expectedResult->getTaxRateInMinors(), $result->getTaxRateInMinors());
         }
     }
 }

@@ -2,41 +2,19 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Tests;
 
-use FromDevelopersForDevelopers\RelMon\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
 
 class DummyMonetaryBasis implements MonetaryBasisInterface
 {
     public function __construct(
-        private null|string|int $net = null,
-        private null|string|int $gross = null,
-        private null|string|int $tax = null,
-        private null|string|int $taxRate = null,
         private ?int $netInMinors = null,
         private ?int $grossInMinors = null,
         private ?int $taxInMinors = null,
         private ?int $taxRateInMinors = null,
+        private int $precision = 2,
+        private int $taxRatePrecision = 2,
     )
     {
-    }
-
-    public function getNet(): null|string|int
-    {
-        return $this->net;
-    }
-
-    public function getGross(): null|string|int
-    {
-        return $this->gross;
-    }
-
-    public function getTax(): null|string|int
-    {
-        return $this->tax;
-    }
-
-    public function getTaxRate(): null|string|int
-    {
-        return $this->taxRate;
     }
 
     public function getNetInMinors(): ?int
@@ -57,5 +35,15 @@ class DummyMonetaryBasis implements MonetaryBasisInterface
     public function getTaxRateInMinors(): ?int
     {
         return $this->taxRateInMinors;
+    }
+
+    public function getPrecision(): int
+    {
+        return $this->precision;
+    }
+
+    public function getTaxRatePrecision(): int
+    {
+        return $this->taxRatePrecision;
     }
 }

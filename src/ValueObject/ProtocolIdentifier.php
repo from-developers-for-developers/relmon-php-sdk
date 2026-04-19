@@ -2,7 +2,7 @@
 
 namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 
-use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
+use Composer\Semver\VersionParser;
 use FromDevelopersForDevelopers\RelMon\Exception\ProtocolIdentifierInvalidException;
 
 class ProtocolIdentifier
@@ -15,13 +15,17 @@ class ProtocolIdentifier
     // Cached protocol identifiers to speed up parsing in case of series of RelMonObject instances are processed.
     private static array $cachedProtocolIdentifiers = [];
 
+    /**
+     * @param string $protocolIdentifier
+     * @throws ProtocolIdentifierInvalidException
+     */
     public function __construct(string $protocolIdentifier)
     {
         if (isset(self::$cachedProtocolIdentifiers[$protocolIdentifier])) {
             $this->version = self::$cachedProtocolIdentifiers[$protocolIdentifier]->getVersion();
             $this->determinismLevel = self::$cachedProtocolIdentifiers[$protocolIdentifier]->getDeterminismLevel();
             $this->inCompactMode = self::$cachedProtocolIdentifiers[$protocolIdentifier]->isInCompactMode();
-            $this->inMinorsMode = self::$cachedProtocolIdentifiers[$protocolIdentifier]->isInCompactMode();
+            $this->inMinorsMode = self::$cachedProtocolIdentifiers[$protocolIdentifier]->isInMinorsMode();
 
             return;
         }
@@ -30,9 +34,16 @@ class ProtocolIdentifier
             throw new ProtocolIdentifierInvalidException('ProtocolIdentifier should start with "relmon@".');
         }
 
-        list($version, $protocolOptions) = explode('/', substr($protocolIdentifier, 7));
+        $parts = explode('/', substr($protocolIdentifier, 7));
+        $version = $parts[0] ?? '';
+        $protocolOptions = $parts[1] ?? '';
 
-        // @TODO: assert version format
+        try {
+            (new VersionParser())->normalize($version);
+        } catch (\UnexpectedValueException $e) {
+            throw new ProtocolIdentifierInvalidException("Invalid protocol version: {$version}");
+        }
+
         $this->version = $version;
 
         if (!$protocolOptions) {
@@ -45,7 +56,7 @@ class ProtocolIdentifier
             throw new ProtocolIdentifierInvalidException('Protocol options should be in format "determinismLevel[?:mode1[?.mode2...]]".');
         }
 
-        $determinismLevel = $protocolOptions[0];
+        $determinismLevel = (int)$protocolOptions[0];
         $modes = !empty($protocolOptions[1]) ? explode('.', $protocolOptions[1]) : [];
 
         $this->determinismLevel = $determinismLevel;

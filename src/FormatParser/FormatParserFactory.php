@@ -2,7 +2,7 @@
 
 namespace FromDevelopersForDevelopers\RelMon\FormatParser;
 
-use FromDevelopersForDevelopers\RelMon\Enum\FormatEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
 use FromDevelopersForDevelopers\RelMon\Exception\FormatParserNotSupportedException;
 
 class FormatParserFactory
@@ -11,12 +11,12 @@ class FormatParserFactory
     {
     }
 
-    public function createFormatParser(FormatEnum $formatEnum): FormatParserInterface
+    public function createFormatParser(string $format): FormatParserInterface
     {
-        if ($formatEnum === FormatEnum::AUTO) {
+        if ($format === Format::AUTO) {
             throw new FormatParserNotSupportedException();
         }
 
-        return $this->formatParserLocator->getFormatParserByFormatEnum($formatEnum);
+        return $this->formatParserLocator->getFormatParserByFormat($format);
     }
 }

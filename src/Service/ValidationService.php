@@ -5,12 +5,11 @@ namespace FromDevelopersForDevelopers\RelMon\Service;
 use FromDevelopersForDevelopers\RelMon\Dto\MonetaryComponentDto;
 use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
 use FromDevelopersForDevelopers\RelMon\Dto\ViolationDto;
-use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
-use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
-use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
-use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevel;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
+use FromDevelopersForDevelopers\RelMon\Enum\Scope;
 use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
-use FromDevelopersForDevelopers\RelMon\ValueObject\RelMonObject;
 
 class ValidationService
 {
@@ -22,19 +21,19 @@ class ValidationService
             $violations[] = new ViolationDto('Precision must be greater or equal to zero.', 'precision');
         }
 
-        if (!is_null($dto->scope) && ScopeEnum::tryFrom($dto->scope) === null) {
+        if (!is_null($dto->scope) && Scope::tryFrom($dto->scope) === null) {
             $violations[] = new ViolationDto('Invalid scope.', 'scope');
         }
 
-        if (!is_null($dto->roundingMode) && RoundingModeEnum::tryFrom($dto->roundingMode) === null) {
-            $violations[] = new ViolationDto('Invalid rounding mode.', 'rounding.mode');
+        if (!is_null($dto->roundingMode) && RoundingMode::tryFrom($dto->roundingMode) === null) {
+            $violations[] = new ViolationDto('Invalid rounding mode.', 'roundingMode');
         }
 
-        if (!is_null($dto->roundingApplication) && RoundingApplicationEnum::tryFrom($dto->roundingApplication) === null) {
-            $violations[] = new ViolationDto('Invalid rounding application.', 'rounding.application');
+        if (!is_null($dto->roundingApplication) && RoundingApplication::tryFrom($dto->roundingApplication) === null) {
+            $violations[] = new ViolationDto('Invalid rounding application.', 'roundingApplication');
         }
 
-        if (!is_null($dto->scope) && $dto->scope === ScopeEnum::COMPONENT->value && empty($dto->components)) {
+        if (!is_null($dto->scope) && $dto->scope === Scope::COMPONENT && empty($dto->components)) {
             $violations[] = new ViolationDto('Components are required if the scope is "c".', 'components');
         }
 
@@ -49,18 +48,21 @@ class ValidationService
     private function validateMonetaryBasisTypes(ProtocolIdentifier $protocolIdentifier, RelMonDto $dto): array
     {
         $fields = [$dto->getNet(), $dto->getGross(), $dto->getTax()];
-        $signs = [];
 
         foreach ($dto->components as $component) {
             $fields = array_merge($fields, [$component->getNet(), $component->getGross(), $component->getTax()]);
         }
 
-        foreach ($fields as $k => $field) {
-            if (is_null($field)) {
-                unset($fields[$k]);
-            } else {
-                $signs[] = $field < 0 ? '-' : '+';
-            }
+        $fields = array_filter($fields, fn($field) => !is_null($field));
+
+        if (empty($fields)) {
+            return [];
+        }
+
+        $signs = array_unique(array_map(fn($field) => (float)$field < 0 ? '-' : '+', $fields));
+
+        if (count($signs) > 1) {
+            return [new ViolationDto('Net, gross and tax fields of root and component levels must have the same sign.')];
         }
 
         $types = array_unique(array_map('gettype', $fields));
@@ -69,29 +71,30 @@ class ValidationService
             return [new ViolationDto('Net, gross and tax fields of root and component levels must be of the same type.')];
         }
 
-        $signs = array_unique($signs);
+        $type = reset($types);
 
-        if (count($signs) > 1) {
-            return [new ViolationDto('Net, gross and tax fields of root and component levels must have the same sign.')];
-        }
+        if ($protocolIdentifier->isInMinorsMode()) {
+            if ($type !== 'integer') {
+                return [new ViolationDto('Net, gross and tax of root and component levels in minors mode must be of type integer.')];
+            }
+        } else {
+            if ($type !== 'string') {
+                return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal (string).')];
+            }
 
-        if ($protocolIdentifier->isInMinorsMode() && $types[0] !== 'integer') {
-            return [new ViolationDto('Net, gross and tax of root and component levels in minors mode must be of type integer.')];
-        } elseif (!$protocolIdentifier->isInMinorsMode() && $types[0] !== 'string') {
-            return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal.')];
-        } elseif (!$protocolIdentifier->isInMinorsMode()) {
             $decimalPlaces = [];
 
             foreach ($fields as $field) {
-                if (!preg_match('/^-?\d+\.(\d)*$/', $field, $matches)) {
+                if (!preg_match('/^-?\d+\.\d+$/', $field)) {
                     return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal.')];
                 }
 
-                $decimalPlaces[] = (int)$matches[1];
+                $parts = explode('.', $field);
+                $decimalPlaces[] = strlen($parts[1]);
             }
 
-            if (!is_null($dto->precision) && max($decimalPlaces) > $dto->precision) {
-                return [new ViolationDto('Decimal places of net, gross and tax values must be exceed the given precision.')];
+            if (!is_null($dto->precision) && !empty($decimalPlaces) && max($decimalPlaces) > $dto->precision) {
+                return [new ViolationDto('Decimal places of net, gross and tax values must not exceed the given precision.')];
             }
         }
 
@@ -104,37 +107,39 @@ class ValidationService
         string                         $violationField = ''
     ): array
     {
-        if ($protocolIdentifier->getDeterminismLevel() === RelMonObject::DETERMINISM_LEVEL_1) {
+        $determinismLevel = $protocolIdentifier->getDeterminismLevel();
+
+        if ($determinismLevel === DeterminismLevel::DL1) {
             if (is_null($dto->getTaxRate())) {
-                return [new ViolationDto('Tax rate must be specified for DL1.', "{$violationField}.taxRate")];
+                return [new ViolationDto('Tax rate must be specified for DL1.', trim("{$violationField}.taxRate", '.'))];
             }
 
             if (is_null($dto->getNet()) && is_null($dto->getGross())) {
-                return [new ViolationDto('Net or gross must be specified for DL1.')];
+                return [new ViolationDto('Net or gross must be specified for DL1.', trim("{$violationField}", '.'))];
             }
-        }
-
-        if ($protocolIdentifier->getDeterminismLevel() === RelMonObject::DETERMINISM_LEVEL_2) {
+        } elseif ($determinismLevel === DeterminismLevel::DL2) {
             if (is_null($dto->getTaxRate())) {
-                return [new ViolationDto('Tax rate must be specified for DL2.', "{$violationField}.taxRate")];
+                return [new ViolationDto('Tax rate must be specified for DL2.', trim("{$violationField}.taxRate", '.'))];
             }
 
             if (is_null($dto->getNet()) || is_null($dto->getGross())) {
-                return [new ViolationDto('Net and gross must be specified for DL2.')];
+                return [new ViolationDto('Net and gross must be specified for DL2.', trim("{$violationField}", '.'))];
+            }
+        } elseif ($determinismLevel === DeterminismLevel::DL3) {
+            if (is_null($dto->getNet()) && is_null($dto->getGross())) {
+                return [new ViolationDto('Net or gross must be specified for DL3.', trim("{$violationField}", '.'))];
+            }
+
+            if (is_null($dto->getTax())) {
+                return [new ViolationDto('Tax must be specified for DL3.', trim("{$violationField}.tax", '.'))];
             }
         }
 
-        if ($protocolIdentifier->getDeterminismLevel() === RelMonObject::DETERMINISM_LEVEL_3) {
-            if (is_null($dto->getNet()) || is_null($dto->getGross()) || is_null($dto->getTax())) {
-                return [new ViolationDto('Net, gross and tax must be specified for DL3.')];
-            }
+        if (!is_null($dto->getTaxRate()) && !preg_match('/^\d+(\.\d+)?$/', (string)$dto->getTaxRate())) {
+            return [new ViolationDto('Tax rate must be a non-negative decimal.', trim("{$violationField}.taxRate", '.'))];
         }
 
-        if (!is_null($dto->taxRate) && !preg_match('/^-?\d{1,3}\.\d{0,3}$/', $dto->taxRate)) {
-            return [new ViolationDto('Tax rate must be of type decimal with maximum 3 decimal places.', "${violationField}.taxRate")];
-        }
-
-        if ($dto->scope === ScopeEnum::COMPONENT->value) {
+        if ($dto instanceof RelMonDto && $dto->scope === Scope::COMPONENT) {
             foreach ($dto->components as $k => $component) {
                 $violations = $this->validateMonetaryBasis($protocolIdentifier, $component, "components.{$k}");
 
@@ -160,31 +165,37 @@ class ValidationService
 
     private function validateGrossAndNet(RelMonDto|MonetaryComponentDto $dto, string $violationField = ''): array
     {
-        // Most of the consistency among net/gross/tax is checked in DerivationService.
-        if (
-            !is_null($dto->getGross())
-            && !is_null($dto->getNet())
-            && (
-                ($dto->getNet() < 0 && $dto->getGross() > $dto->getNet())
-                || ($dto->getNet() > 0 && $dto->getGross() < $dto->getNet())
-            )
-        ) {
-            return [new ViolationDto('Gross must be greater than or equal to net.', "{$violationField}.gross")];
+        $net = $dto->getNet();
+        $gross = $dto->getGross();
+        $tax = $dto->getTax();
+
+        if (!is_null($net) && !is_null($gross)) {
+            if ((float)$net >= 0 && (float)$gross < (float)$net) {
+                return [new ViolationDto('Gross must be greater than or equal to net for positive amounts.', trim("{$violationField}.gross", '.'))];
+            }
+
+            if ((float)$net < 0 && (float)$gross > (float)$net) {
+                return [new ViolationDto('Gross must be less than or equal to net for negative amounts.', trim("{$violationField}.gross", '.'))];
+            }
         }
 
-        if (!is_null($dto->getGross()) && !is_null($dto->getTax()) && $dto->getGross() < $dto->getTax()) {
-            return [new ViolationDto('Tax must be less than gross.', "{$violationField}.tax")];
+        if (!is_null($gross) && !is_null($tax)) {
+            if ((float)$gross >= 0 && (float)$tax > (float)$gross) {
+                return [new ViolationDto('Tax must be less than or equal to gross for positive amounts.', trim("{$violationField}.tax", '.'))];
+            }
+
+            if ((float)$gross < 0 && (float)$tax < (float)$gross) {
+                return [new ViolationDto('Tax must be greater than or equal to gross for negative amounts.', trim("{$violationField}.tax", '.'))];
+            }
         }
 
-        if (!is_null($dto->getNet()) && !is_null($dto->getTax()) && $dto->getNet() < $dto->getTax()) {
-            return [new ViolationDto('Tax must be less than net.', "{$violationField}.tax")];
-        }
+        if ($dto instanceof RelMonDto) {
+            foreach ($dto->components as $k => $component) {
+                $violations = $this->validateGrossAndNet($component, "components.{$k}");
 
-        foreach ($dto->components as $k => $component) {
-            $violations = $this->validateGrossAndNet($component, "components.{$k}");
-
-            if (!empty($violations)) {
-                return $violations;
+                if (!empty($violations)) {
+                    return $violations;
+                }
             }
         }
 

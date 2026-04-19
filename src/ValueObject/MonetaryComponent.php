@@ -8,7 +8,7 @@ class MonetaryComponent
         private ?int    $net,
         private ?int    $gross,
         private ?int    $tax,
-        private ?string $taxRate = null,
+        private ?int    $taxRate = null,
         private ?string $comment = null,
     )
     {
@@ -29,7 +29,7 @@ class MonetaryComponent
         return $this->tax;
     }
 
-    public function getTaxRate(): ?string
+    public function getTaxRate(): ?int
     {
         return $this->taxRate;
     }

@@ -7,10 +7,10 @@ use FromDevelopersForDevelopers\RelMon\Dto\CanonicalRelMonDto;
 use FromDevelopersForDevelopers\RelMon\Dto\MonetaryComponentDto;
 use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
 use FromDevelopersForDevelopers\RelMon\Dto\ViolationDto;
-use FromDevelopersForDevelopers\RelMon\Enum\FormatEnum;
-use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
-use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
-use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
+use FromDevelopersForDevelopers\RelMon\Enum\Scope;
 use FromDevelopersForDevelopers\RelMon\Exception\FormatNotSupportedException;
 use FromDevelopersForDevelopers\RelMon\Exception\ProtocolIdentifierInvalidException;
 use FromDevelopersForDevelopers\RelMon\Exception\ValidationException;
@@ -31,7 +31,7 @@ class RelMonService
     {
     }
 
-    public function build(mixed $input, FormatEnum $formatEnum = FormatEnum::AUTO): RelMonObject
+    public function build(mixed $input, string $formatEnum = Format::AUTO): RelMonObject
     {
         try {
             $format = $this->guessFormat($input, $formatEnum);
@@ -52,7 +52,7 @@ class RelMonService
                 list($net, $gross, $tax, $taxRate) = $this->getMinorNumbers(
                     $canonicalDto,
                     $component,
-                    $canonicalDto->getScope() === ScopeEnum::COMPONENT
+                    $canonicalDto->getScope() === Scope::COMPONENT
                 );
 
                 $components[] = new MonetaryComponent($net, $gross, $tax, $taxRate, $component->getComment());
@@ -61,7 +61,7 @@ class RelMonService
             list($net, $gross, $tax, $taxRate) = $this->getMinorNumbers(
                 $canonicalDto,
                 $canonicalDto,
-                $canonicalDto->getScope() === ScopeEnum::ROOT
+                $canonicalDto->getScope() === Scope::ROOT
             );
 
             $relmon = new RelMonObject(
@@ -85,39 +85,39 @@ class RelMonService
         }
     }
 
-    private function guessFormat(mixed $input, FormatEnum $formatEnum): FormatEnum
+    private function guessFormat(mixed $input, string $formatEnum): string
     {
-        if ($formatEnum !== FormatEnum::AUTO) {
+        if ($formatEnum !== Format::AUTO) {
             return $formatEnum;
         }
 
         if (is_array($input)) {
-            return FormatEnum::JSON_ARRAY;
+            return Format::JSON_ARRAY;
         } elseif (class_exists('\SimpleXMLElement') && $input instanceof \SimpleXMLElement) {
-            return FormatEnum::XML_SIMPLE_XML;
+            return Format::XML_SIMPLE_XML;
         } elseif (class_exists('\DOMDocument') && $input instanceof \DOMDocument) {
-            return FormatEnum::XML_DOM_DOCUMENT;
+            return Format::XML_DOM_DOCUMENT;
         } elseif (is_string($input)) {
             $input = ltrim($input);
 
             if (str_starts_with($input, 'relmon-json://')) {
-                return FormatEnum::URI_JSON;
+                return Format::URI_JSON;
             }
 
             if (str_starts_with($input, 'relmon-xml://')) {
-                return FormatEnum::URI_XML;
+                return Format::URI_XML;
             }
 
             if (str_starts_with($input, 'relmon-min://')) {
-                return FormatEnum::URI_MINIMALISTIC;
+                return Format::URI_MINIMALISTIC;
             }
 
             if (str_starts_with($input, '<')) {
-                return FormatEnum::XML_STRING;
+                return Format::XML_STRING;
             }
 
             if (str_starts_with($input, '{')) {
-                return FormatEnum::JSON_STRING;
+                return Format::JSON_STRING;
             }
         }
 
@@ -140,9 +140,9 @@ class RelMonService
 
         return new CanonicalRelMonDto(
             protocolIdentifier: $protocolIdentifier,
-            scope: ScopeEnum::tryFrom((string)$dto->scope) ?? ScopeEnum::ROOT,
-            roundingMode: RoundingModeEnum::tryFrom((string)$dto->roundingMode) ?? RoundingModeEnum::HALF_EVEN,
-            roundingApplication: RoundingApplicationEnum::tryFrom($dto->roundingApplication) ?? RoundingApplicationEnum::TAX,
+            scope: Scope::tryFrom((string)$dto->scope) ?? Scope::ROOT,
+            roundingMode: RoundingMode::tryFrom((string)$dto->roundingMode) ?? RoundingMode::HALF_EVEN,
+            roundingApplication: RoundingApplication::tryFrom($dto->roundingApplication) ?? RoundingApplication::TAX,
             basis: $this->minorsService->toMinors($dto, $precision, $taxRatePrecision),
             precision: $precision,
             taxRatePrecision: $taxRatePrecision,
@@ -153,7 +153,7 @@ class RelMonService
 
     private function compareAmounts(RelMonObject $relmon): void
     {
-        if (empty($relmon->getComponents()) || $relmon->getScope() === ScopeEnum::ROOT) {
+        if (empty($relmon->getComponents()) || $relmon->getScope() === Scope::ROOT) {
             return;
         }
 
@@ -196,6 +196,10 @@ class RelMonService
         }
 
         foreach ([$dto->net, $dto->gross, $dto->tax] as $basis) {
+            if (is_null($basis)) {
+                continue;
+            }
+
             if (is_int($basis)) {
                 // Cannot determine precision from minors.
                 return 0;

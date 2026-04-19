@@ -2,43 +2,32 @@
 
 namespace FromDevelopersForDevelopers\RelMon\FormatParser;
 
-use FromDevelopersForDevelopers\RelMon\Enum\FormatEnum;
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
 use FromDevelopersForDevelopers\RelMon\Exception\FormatParserNotLocatedException;
 
 class FormatParserLocator
 {
+    /** @var FormatParserInterface[] */
     private array $formatParsers = [];
 
     public function __construct(iterable $formatParsers)
     {
         foreach ($formatParsers as $formatParser) {
-            $this->formatParsers[$this->getRealClassName($formatParser)] = $formatParser;
+            $this->addFormatParser($formatParser);
         }
     }
 
-    public function getFormatParsers(): array
+    public function addFormatParser(FormatParserInterface $formatParser): void
     {
-        return $this->formatParsers;
+        $this->formatParsers[get_class($formatParser)] = $formatParser;
     }
 
-    public function getFormatParserByFormatEnum(FormatEnum $formatEnum): FormatParserInterface
+    public function getFormatParserByFormat(string $format): FormatParserInterface
     {
-        if (!isset($this->formatParsers[$formatEnum->value])) {
+        if (!isset($this->formatParsers[$format])) {
             throw new FormatParserNotLocatedException();
         }
 
-        return $this->formatParsers[$formatEnum->value];
-    }
-
-    private function getRealClassName(object $object): string
-    {
-        $className = get_class($object);
-
-        if ($className === 'Symfony\Component\VarExporter\LazyObjectInterface') {
-            $reflectedObject = new \ReflectionClass($object);
-            $className = $reflectedObject->getParentClass()->getName();
-        }
-
-        return $className;
+        return $this->formatParsers[$format];
     }
 }
