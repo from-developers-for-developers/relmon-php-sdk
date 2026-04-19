@@ -10,6 +10,7 @@ use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
 use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
+use FromDevelopersForDevelopers\RelMon\ValueObject\RelMonObject;
 
 class ValidationService
 {
@@ -103,7 +104,7 @@ class ValidationService
         string                         $violationField = ''
     ): array
     {
-        if ($protocolIdentifier->getDeterminismLevel() === DeterminismLevelEnum::DL1) {
+        if ($protocolIdentifier->getDeterminismLevel() === RelMonObject::DETERMINISM_LEVEL_1) {
             if (is_null($dto->getTaxRate())) {
                 return [new ViolationDto('Tax rate must be specified for DL1.', "{$violationField}.taxRate")];
             }
@@ -113,7 +114,7 @@ class ValidationService
             }
         }
 
-        if ($protocolIdentifier->getDeterminismLevel() === DeterminismLevelEnum::DL2) {
+        if ($protocolIdentifier->getDeterminismLevel() === RelMonObject::DETERMINISM_LEVEL_2) {
             if (is_null($dto->getTaxRate())) {
                 return [new ViolationDto('Tax rate must be specified for DL2.', "{$violationField}.taxRate")];
             }
@@ -123,7 +124,7 @@ class ValidationService
             }
         }
 
-        if ($protocolIdentifier->getDeterminismLevel() === DeterminismLevelEnum::DL3) {
+        if ($protocolIdentifier->getDeterminismLevel() === RelMonObject::DETERMINISM_LEVEL_3) {
             if (is_null($dto->getNet()) || is_null($dto->getGross()) || is_null($dto->getTax())) {
                 return [new ViolationDto('Net, gross and tax must be specified for DL3.')];
             }

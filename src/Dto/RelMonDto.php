@@ -2,10 +2,8 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Dto;
 
-use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
-
 /** @internal */
-class RelMonDto implements MonetaryBasisInterface
+class RelMonDto
 {
     public function __construct(
         public string          $protocolIdentifier,

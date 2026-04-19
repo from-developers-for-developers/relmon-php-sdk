@@ -4,7 +4,7 @@ namespace FromDevelopersForDevelopers\RelMon\Dto;
 
 class ViolationDto
 {
-    public function __construct(private readonly string $message, private readonly string $field = '')
+    public function __construct(private string $message, private string $field = '')
     {
     }
 

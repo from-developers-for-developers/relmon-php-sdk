@@ -8,17 +8,35 @@ use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
 
 class RelMonObject
 {
+    const DETERMINISM_LEVEL_1 = 1;
+    const DETERMINISM_LEVEL_2 = 1;
+    const DETERMINISM_LEVEL_3 = 1;
+
+    CONST ROUNDING_APPLICATION_TAX = 'tax';
+    const ROUNDING_APPLICATION_TOTAL = 'total';
+
+    const ROUNDING_MODE_HALF_AWAY_FROM_ZERO = 'haway';
+    const ROUNDING_MODE_HALF_TOWARDS_ZERO = 'hzero';
+    const ROUNDING_MODE_HALF_EVEN = 'heven';
+    const ROUNDING_MODE_UP = 'up';
+    const ROUNDING_MODE_DOWN = 'down';
+
+    const SCOPE_ROOT = 'r';
+    const SCOPE_COMPONENT = 'c';
+
     public function __construct(
-        private readonly int                     $net,
-        private readonly int                     $gross,
-        private readonly int                     $tax,
-        private readonly ?int                    $taxRate = null,
-        private readonly ?string                 $unit = null,
-        private readonly ?int                    $precision = null,
-        private readonly ScopeEnum               $scope = ScopeEnum::ROOT,
-        private readonly RoundingModeEnum        $roundingMode = RoundingModeEnum::HALF_EVEN,
-        private readonly RoundingApplicationEnum $roundingApplication = RoundingApplicationEnum::TAX,
-        private readonly array                   $components = [],
+        private int                     $net,
+        private int                     $gross,
+        private int                     $tax,
+        private ?int                    $taxRate = null,
+        private ?string                 $unit = null,
+        private ?int                    $precision = null,
+        private ScopeEnum               $scope = ScopeEnum::ROOT,
+        private RoundingModeEnum        $roundingMode = RoundingModeEnum::HALF_EVEN,
+        private RoundingApplicationEnum $roundingApplication = RoundingApplicationEnum::TAX,
+
+        /** @var MonetaryComponent[] */
+        private array                   $components = [],
     )
     {
     }

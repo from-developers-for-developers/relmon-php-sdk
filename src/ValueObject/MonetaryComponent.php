@@ -5,26 +5,26 @@ namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 class MonetaryComponent
 {
     public function __construct(
-        private string|int $net,
-        private string|int $gross,
-        private string|int $tax,
-        private ?string    $taxRate = null,
-        private ?string    $comment = null,
+        private ?int    $net,
+        private ?int    $gross,
+        private ?int    $tax,
+        private ?string $taxRate = null,
+        private ?string $comment = null,
     )
     {
     }
 
-    public function getNet(): string|int
+    public function getNet(): ?int
     {
         return $this->net;
     }
 
-    public function getGross(): string|int
+    public function getGross(): ?int
     {
         return $this->gross;
     }
 
-    public function getTax(): string|int
+    public function getTax(): ?int
     {
         return $this->tax;
     }

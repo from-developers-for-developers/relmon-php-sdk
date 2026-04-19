@@ -1,49 +1,50 @@
 <?php
 
-namespace FromDevelopersForDevelopers\RelMon\ValueObject;
+namespace FromDevelopersForDevelopers\RelMon\Dto;
 
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\ScopeEnum;
-use FromDevelopersForDevelopers\RelMon\Interface\MonetaryMinorsBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
+use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
 
 /** @internal */
-class ValidatedRelMon implements MonetaryMinorsBasisInterface
+class CanonicalRelMonDto implements MonetaryBasisInterface
 {
     public function __construct(
-        private readonly ProtocolIdentifier           $protocolIdentifier,
-        private readonly ScopeEnum                    $scope,
-        private readonly RoundingModeEnum             $roundingMode,
-        private readonly RoundingApplicationEnum      $roundingApplication,
-        private readonly MonetaryMinorsBasisInterface $minorsBasis,
-        private readonly ?string                      $unit = null,
-        private readonly ?int                         $precision = null,
-        private readonly int                          $taxRatePrecision, // @TODO move position
+        private ProtocolIdentifier      $protocolIdentifier,
+        private ScopeEnum               $scope,
+        private RoundingModeEnum        $roundingMode,
+        private RoundingApplicationEnum $roundingApplication,
+        private MonetaryBasisInterface  $basis,
+        private int                     $precision,
+        private int                     $taxRatePrecision,
+        private ?string                 $unit = null,
 
-        /** @var ValidatedMonetaryComponent[] */
-        private readonly array                        $components = [],
+        /** @var CanonicalMonetaryComponentDto[] */
+        private array                   $components = [],
     )
     {
     }
 
     public function getNetInMinors(): ?int
     {
-        return $this->minorsBasis->getNetInMinors();
+        return $this->basis->getNetInMinors();
     }
 
     public function getGrossInMinors(): ?int
     {
-        return $this->minorsBasis->getGrossInMinors();
+        return $this->basis->getGrossInMinors();
     }
 
     public function getTaxInMinors(): ?int
     {
-        return $this->minorsBasis->getTaxInMinors();
+        return $this->basis->getTaxInMinors();
     }
 
     public function getTaxRateInMinors(): ?int
     {
-        return $this->minorsBasis->getTaxRateInMinors();
+        return $this->basis->getTaxRateInMinors();
     }
 
     public function getProtocolIdentifier(): ProtocolIdentifier
@@ -71,7 +72,7 @@ class ValidatedRelMon implements MonetaryMinorsBasisInterface
         return $this->unit;
     }
 
-    public function getPrecision(): ?int
+    public function getPrecision(): int
     {
         return $this->precision;
     }

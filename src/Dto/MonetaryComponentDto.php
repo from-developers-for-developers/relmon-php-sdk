@@ -2,10 +2,8 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Dto;
 
-use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
-
 /** @internal */
-class MonetaryComponentDto implements MonetaryBasisInterface
+class MonetaryComponentDto
 {
     public function __construct(
         private null|string|int $net = null,

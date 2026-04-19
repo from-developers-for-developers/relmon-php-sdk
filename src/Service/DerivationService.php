@@ -2,28 +2,29 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Service;
 
+use FromDevelopersForDevelopers\RelMon\Dto\CanonicalRelMonDto;
 use FromDevelopersForDevelopers\RelMon\Enum\DeterminismLevelEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplicationEnum;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingModeEnum;
 use FromDevelopersForDevelopers\RelMon\Exception\DerivationException;
-use FromDevelopersForDevelopers\RelMon\Interface\MonetaryMinorsBasisInterface;
+use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
 use FromDevelopersForDevelopers\RelMon\ValueObject\DerivedResult;
-use FromDevelopersForDevelopers\RelMon\ValueObject\ValidatedRelMon;
+use FromDevelopersForDevelopers\RelMon\ValueObject\RelMonObject;
 
 class DerivationService
 {
-    public function derive(ValidatedRelMon $relmon, MonetaryMinorsBasisInterface $basis): DerivedResult
+    public function derive(CanonicalRelMonDto $relmon, MonetaryBasisInterface $basis): DerivedResult
     {
         return match ($relmon->getProtocolIdentifier()->getDeterminismLevel()) {
-            DeterminismLevelEnum::DL3 => $this->deriveDeterminismLevelThree($relmon, $basis),
-            DeterminismLevelEnum::DL2 => $this->deriveDeterminismLevelTwo($relmon, $basis),
-            DeterminismLevelEnum::DL1 => $this->deriveDeterminismLevelOne($relmon, $basis),
+            RelMonObject::DETERMINISM_LEVEL_1 => $this->deriveDeterminismLevelThree($relmon, $basis),
+            RelMonObject::DETERMINISM_LEVEL_2 => $this->deriveDeterminismLevelTwo($relmon, $basis),
+            RelMonObject::DETERMINISM_LEVEL_3 => $this->deriveDeterminismLevelOne($relmon, $basis),
         };
     }
 
     private function deriveDeterminismLevelThree(
-        ValidatedRelMon              $relmon,
-        MonetaryMinorsBasisInterface $basis,
+        CanonicalRelMonDto              $relmon,
+        MonetaryBasisInterface $basis,
     ): DerivedResult
     {
         if (
@@ -63,14 +64,15 @@ class DerivationService
             $basis->getNetInMinors(),
             $basis->getGrossInMinors(),
             $basis->getTaxInMinors(),
-            $basis->getTaxRateInMinors(),
+            $basis->getPrecision(),
             $basis->getTaxRatePrecision(),
+            $basis->getTaxRateInMinors(),
         );
     }
 
     private function deriveDeterminismLevelTwo(
-        ValidatedRelMon              $relmon,
-        MonetaryMinorsBasisInterface $basis,
+        CanonicalRelMonDto              $relmon,
+        MonetaryBasisInterface $basis,
     ): DerivedResult
     {
         $net = $basis->getNetInMinors();
@@ -95,12 +97,12 @@ class DerivationService
             $relmon->getRoundingApplication(),
         );
 
-        return new DerivedResult($net, $gross, $tax, $taxRate, $basis->getTaxRatePrecision(),);
+        return new DerivedResult($net, $gross, $tax, $basis->getPrecision(), $basis->getTaxRatePrecision(), $taxRate);
     }
 
     private function deriveDeterminismLevelOne(
-        ValidatedRelMon              $relmon,
-        MonetaryMinorsBasisInterface $basis,
+        CanonicalRelMonDto              $relmon,
+        MonetaryBasisInterface $basis,
     ): DerivedResult
     {
         $taxRate = $basis->getTaxRateInMinors();
@@ -148,7 +150,14 @@ class DerivationService
             throw new DerivationException('Net + tax must be equal to gross.');
         }
 
-        return new DerivedResult($calculatedNet, $calculatedGross, $tax, $taxRate, $basis->getTaxRatePrecision());
+        return new DerivedResult(
+            $calculatedNet,
+            $calculatedGross,
+            $tax,
+            $basis->getPrecision(),
+            $basis->getTaxRatePrecision(),
+            $taxRate,
+        );
     }
 
     private function validateReconstructedTax(

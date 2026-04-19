@@ -8,7 +8,7 @@ use FromDevelopersForDevelopers\RelMon\Exception\ProtocolIdentifierInvalidExcept
 class ProtocolIdentifier
 {
     private string $version;
-    private DeterminismLevelEnum $determinismLevel;
+    private int $determinismLevel;
     private bool $inCompactMode = false;
     private bool $inMinorsMode = false;
 
@@ -48,7 +48,7 @@ class ProtocolIdentifier
         $determinismLevel = $protocolOptions[0];
         $modes = !empty($protocolOptions[1]) ? explode('.', $protocolOptions[1]) : [];
 
-        $this->determinismLevel = DeterminismLevelEnum::from((int)$determinismLevel);
+        $this->determinismLevel = $determinismLevel;
 
         if (is_array($modes)) {
             $modesActive = 0;
@@ -76,7 +76,7 @@ class ProtocolIdentifier
         return $this->version;
     }
 
-    public function getDeterminismLevel(): DeterminismLevelEnum
+    public function getDeterminismLevel(): int
     {
         return $this->determinismLevel;
     }
