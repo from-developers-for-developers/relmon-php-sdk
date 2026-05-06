@@ -19,9 +19,9 @@ class JsonArrayParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('Array is expected.');
         }
 
-        $rounding = $input['rounding'] ?? $input['r'] ?? [];
-        $mode = $rounding['mode'] ?? $rounding['m'] ?? null;
-        $application = $rounding['application'] ?? $rounding['a'] ?? null;
+        $rounding = $this->getAliasedValue($input, 'rounding', 'r') ?? [];
+        $mode = is_array($rounding) ? $this->getAliasedValue($rounding, 'mode', 'm') : null;
+        $application = is_array($rounding) ? $this->getAliasedValue($rounding, 'application', 'a') : null;
 
         if (
             !empty($rounding)
@@ -40,35 +40,48 @@ class JsonArrayParser implements FormatParserInterface
             throw new ValidationException([new ViolationDto("Invalid rounding application: $application", 'rounding.application')]);
         }
 
-        $scope = $input['scope'] ?? $input['s'] ?? null;
+        $scope = $this->getAliasedValue($input, 'scope', 's');
         if ($scope && !Scope::tryFrom($scope)) {
             throw new ValidationException([new ViolationDto("Invalid scope: $scope", 'scope')]);
         }
 
         $components = [];
 
-        foreach ($input['components'] ?? $input['cs'] ?? [] as $component) {
+        foreach ($this->getAliasedValue($input, 'components', 'cs') ?? [] as $component) {
             $components[] = new MonetaryComponentDto(
-                net: $component['net'] ?? $component['n'],
-                gross: $component['gross'] ?? $component['g'],
-                tax: $component['tax'] ?? $component['t'],
-                taxRate: $component['taxRate'] ?? $component['tr'],
-                comment: $component['comment'] ?? $component['c'],
+                net: $this->getAliasedValue($component, 'net', 'n'),
+                gross: $this->getAliasedValue($component, 'gross', 'g'),
+                tax: $this->getAliasedValue($component, 'tax', 't'),
+                taxRate: $this->getAliasedValue($component, 'taxRate', 'tr'),
+                comment: $this->getAliasedValue($component, 'comment', 'c'),
             );
         }
 
         return new RelMonDto(
-            protocolIdentifier: $input['protocol'] ?? $input['p'],
-            net: $input['net'] ?? $input['n'],
-            gross: $input['gross'] ?? $input['g'],
-            tax: $input['tax'] ?? $input['t'],
-            taxRate: $input['taxRate'] ?? $input['tr'],
-            unit: $input['unit'] ?? $input['u'],
-            precision: $input['precision'] ?? $input['pr'],
+            protocolIdentifier: $this->getAliasedValue($input, 'protocol', 'p'),
+            net: $this->getAliasedValue($input, 'net', 'n'),
+            gross: $this->getAliasedValue($input, 'gross', 'g'),
+            tax: $this->getAliasedValue($input, 'tax', 't'),
+            taxRate: $this->getAliasedValue($input, 'taxRate', 'tr'),
+            unit: $this->getAliasedValue($input, 'unit', 'u'),
+            precision: $this->getAliasedValue($input, 'precision', 'pr'),
             scope: $scope,
             roundingMode: $mode,
             roundingApplication: $application,
             components: $components,
         );
+    }
+
+    private function getAliasedValue(array $input, string $fullName, string $compactName): mixed
+    {
+        if (array_key_exists($fullName, $input)) {
+            return $input[$fullName];
+        }
+
+        if (array_key_exists($compactName, $input)) {
+            return $input[$compactName];
+        }
+
+        return null;
     }
 }

@@ -19,14 +19,14 @@ class XmlSimpleXmlParser extends JsonArrayParser implements FormatParserInterfac
     private function toCanonicalArray(\SimpleXMLElement $input): array
     {
         $data = [];
-        $this->setAliasedValue($data, 'protocol', 'p', $this->getChildValue($input, 'protocol', 'p'));
-        $this->setAliasedValue($data, 'net', 'n', $this->getChildValue($input, 'net', 'n'));
-        $this->setAliasedValue($data, 'gross', 'g', $this->getChildValue($input, 'gross', 'g'));
-        $this->setAliasedValue($data, 'tax', 't', $this->getChildValue($input, 'tax', 't'));
-        $this->setAliasedValue($data, 'taxRate', 'tr', $this->getChildValue($input, 'taxRate', 'tr'));
-        $this->setAliasedValue($data, 'unit', 'u', $this->getChildValue($input, 'unit', 'u'));
-        $this->setAliasedValue($data, 'precision', 'pr', $this->getPrecisionValue($input));
-        $this->setAliasedValue($data, 'scope', 's', $this->getChildValue($input, 'scope', 's'));
+        $this->setAliasedXmlValue($data, $input, 'protocol', 'p');
+        $this->setAliasedXmlValue($data, $input, 'net', 'n');
+        $this->setAliasedXmlValue($data, $input, 'gross', 'g');
+        $this->setAliasedXmlValue($data, $input, 'tax', 't');
+        $this->setAliasedXmlValue($data, $input, 'taxRate', 'tr');
+        $this->setAliasedXmlValue($data, $input, 'unit', 'u');
+        $this->setAliasedXmlValue($data, $input, 'precision', 'pr', $this->getPrecisionValue($input));
+        $this->setAliasedXmlValue($data, $input, 'scope', 's');
 
         $rounding = $this->extractRounding($input);
         if ($rounding !== []) {
@@ -50,11 +50,8 @@ class XmlSimpleXmlParser extends JsonArrayParser implements FormatParserInterfac
         }
 
         $rounding = [];
-        $mode = $this->getChildValue($roundingNode, 'mode', 'm');
-        $application = $this->getChildValue($roundingNode, 'application', 'a');
-
-        $this->setAliasedValue($rounding, 'mode', 'm', $mode);
-        $this->setAliasedValue($rounding, 'application', 'a', $application);
+        $this->setAliasedXmlValue($rounding, $roundingNode, 'mode', 'm');
+        $this->setAliasedXmlValue($rounding, $roundingNode, 'application', 'a');
 
         return $rounding;
     }
@@ -71,11 +68,11 @@ class XmlSimpleXmlParser extends JsonArrayParser implements FormatParserInterfac
 
         foreach ($componentsNode->children() as $componentNode) {
             $component = [];
-            $this->setAliasedValue($component, 'net', 'n', $this->getChildValue($componentNode, 'net', 'n'));
-            $this->setAliasedValue($component, 'gross', 'g', $this->getChildValue($componentNode, 'gross', 'g'));
-            $this->setAliasedValue($component, 'tax', 't', $this->getChildValue($componentNode, 'tax', 't'));
-            $this->setAliasedValue($component, 'taxRate', 'tr', $this->getChildValue($componentNode, 'taxRate', 'tr'));
-            $this->setAliasedValue($component, 'comment', 'c', $this->getChildValue($componentNode, 'comment', 'c'));
+            $this->setAliasedXmlValue($component, $componentNode, 'net', 'n');
+            $this->setAliasedXmlValue($component, $componentNode, 'gross', 'g');
+            $this->setAliasedXmlValue($component, $componentNode, 'tax', 't');
+            $this->setAliasedXmlValue($component, $componentNode, 'taxRate', 'tr');
+            $this->setAliasedXmlValue($component, $componentNode, 'comment', 'c');
             $components[] = $component;
         }
 
@@ -115,5 +112,25 @@ class XmlSimpleXmlParser extends JsonArrayParser implements FormatParserInterfac
     {
         $target[$fullName] = $value;
         $target[$compactName] = $value;
+    }
+
+    private function setAliasedXmlValue(
+        array &$target,
+        \SimpleXMLElement $input,
+        string $fullName,
+        string $compactName,
+        mixed $value = null
+    ): void {
+        $this->setAliasedValue(
+            $target,
+            $fullName,
+            $compactName,
+            func_num_args() === 5 ? $value : $this->getAliasedChildValue($input, $fullName, $compactName)
+        );
+    }
+
+    private function getAliasedChildValue(\SimpleXMLElement $input, string $fullName, string $compactName): ?string
+    {
+        return $this->getChildValue($input, $fullName, $compactName);
     }
 }
