@@ -5,6 +5,7 @@ namespace FromDevelopersForDevelopers\RelMon\Tests\FormatParser;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
 use FromDevelopersForDevelopers\RelMon\Enum\Scope;
+use FromDevelopersForDevelopers\RelMon\Exception\FormatParserWrongInputTypeException;
 use FromDevelopersForDevelopers\RelMon\Exception\ValidationException;
 use FromDevelopersForDevelopers\RelMon\FormatParser\JsonArrayParser;
 use PHPUnit\Framework\TestCase;
@@ -137,6 +138,22 @@ class JsonArrayParserTest extends TestCase
     public function testInvalidScopeThrowsException(): void
     {
         $input = ['scope' => 'invalid'];
+
+        $this->expectException(ValidationException::class);
+        $this->parser->parse($input);
+    }
+
+    public function testParseThrowsExceptionOnWrongInputType(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        $this->parser->parse('not-an-array');
+    }
+
+    public function testParseThrowsExceptionOnIncompleteRoundingDefinition(): void
+    {
+        $input = [
+            'rounding' => ['mode' => RoundingMode::UP],
+        ];
 
         $this->expectException(ValidationException::class);
         $this->parser->parse($input);

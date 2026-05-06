@@ -13,18 +13,16 @@ class XmlDomDocumentParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('DOMDocument instance is expected.');
         }
 
-        return new RelMonDto(
-            protocolIdentifier: 'relmon@1.0.0/3',
-            net: null,
-            gross: null,
-            tax: null,
-            taxRate: null,
-            unit: null,
-            precision: null,
-            scope: null,
-            roundingMode: null,
-            roundingApplication: null,
-            components: [],
-        );
+        if (!$input->documentElement instanceof \DOMElement) {
+            throw new FormatParserWrongInputTypeException('DOMDocument must contain a root element.');
+        }
+
+        $xml = simplexml_import_dom($input->documentElement);
+
+        if (!$xml instanceof \SimpleXMLElement) {
+            throw new FormatParserWrongInputTypeException('Could not parse DOMDocument.');
+        }
+
+        return (new XmlSimpleXmlParser())->parse($xml);
     }
 }

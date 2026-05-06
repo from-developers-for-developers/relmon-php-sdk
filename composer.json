@@ -21,5 +21,9 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.6"
+    },
+    "suggest": {
+        "ext-dom": "Recommended for XML parsing tests and DOMDocument-based RelMon inputs.",
+        "ext-simplexml": "Recommended for XML parsing tests and SimpleXMLElement-based RelMon inputs."
     }
 }

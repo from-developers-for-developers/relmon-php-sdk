@@ -26,6 +26,15 @@ class ProtocolIdentifierTest extends TestCase
         $this->assertFalse($pi->isInMinorsMode());
     }
 
+    public function test_construct_valid_reversed_modes(): void
+    {
+        $pi = new ProtocolIdentifier('relmon@1.0.0/3:m.c');
+        $this->assertSame('1.0.0', $pi->getVersion());
+        $this->assertSame(3, $pi->getDeterminismLevel());
+        $this->assertTrue($pi->isInCompactMode());
+        $this->assertTrue($pi->isInMinorsMode());
+    }
+
     public function test_construct_invalid_version(): void
     {
         $this->expectException(ProtocolIdentifierInvalidException::class);
@@ -52,6 +61,20 @@ class ProtocolIdentifierTest extends TestCase
         $this->expectException(ProtocolIdentifierInvalidException::class);
         $this->expectExceptionMessage('Only "c" and "m" modes are allowed in ProtocolIdentifier.');
         new ProtocolIdentifier('relmon@1.0.0/1:x');
+    }
+
+    public function test_construct_invalid_options_structure(): void
+    {
+        $this->expectException(ProtocolIdentifierInvalidException::class);
+        $this->expectExceptionMessage('Protocol options should be in format "determinismLevel[?:mode1[?.mode2...]]".');
+        new ProtocolIdentifier('relmon@1.0.0/1:c:m');
+    }
+
+    public function test_construct_duplicate_modes_are_invalid(): void
+    {
+        $this->expectException(ProtocolIdentifierInvalidException::class);
+        $this->expectExceptionMessage('Only "c" and "m" modes are allowed in ProtocolIdentifier.');
+        new ProtocolIdentifier('relmon@1.0.0/1:c.c');
     }
 
     public function test_caching(): void

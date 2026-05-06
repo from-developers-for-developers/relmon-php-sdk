@@ -5,6 +5,7 @@ namespace FromDevelopersForDevelopers\RelMon\Tests\FormatParser;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
 use FromDevelopersForDevelopers\RelMon\Enum\Scope;
+use FromDevelopersForDevelopers\RelMon\Exception\FormatParserWrongInputTypeException;
 use FromDevelopersForDevelopers\RelMon\FormatParser\UriJsonParser;
 use PHPUnit\Framework\TestCase;
 
@@ -108,5 +109,23 @@ class UriJsonParserTest extends TestCase
         $this->assertEquals('21.00', $component->getTax());
         $this->assertEquals('21.00', $component->getTaxRate());
         $this->assertEquals('Test component', $component->getComment());
+    }
+
+    public function testParseThrowsExceptionOnWrongPrefix(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        (new UriJsonParser())->parse('relmon-xml://abcd');
+    }
+
+    public function testParseThrowsExceptionOnEmptyPayload(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        (new UriJsonParser())->parse('relmon-json://');
+    }
+
+    public function testParseThrowsExceptionOnMalformedDecodedJson(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        (new UriJsonParser())->parse('relmon-json://' . base64_encode('{"protocol":'));
     }
 }

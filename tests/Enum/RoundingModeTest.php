@@ -45,12 +45,33 @@ class RoundingModeTest extends TestCase
         ];
     }
 
+    public static function roundWithPrecisionDataProvider(): array
+    {
+        return [
+            [RoundingMode::HALF_AWAY_FROM_ZERO, 1.25, 1, 1],
+            [RoundingMode::HALF_AWAY_FROM_ZERO, -1.25, 1, -1],
+            [RoundingMode::HALF_TOWARDS_ZERO, 1.25, 1, 1],
+            [RoundingMode::HALF_EVEN, 1.25, 1, 1],
+            [RoundingMode::HALF_EVEN, 1.35, 1, 1],
+            [RoundingMode::UP, 1.21, 1, 2],
+            [RoundingMode::DOWN, 1.29, 1, 1],
+        ];
+    }
+
     /**
      * @dataProvider roundDataProvider
      */
     public function test_round(string $mode, float|int $input, int $expected): void
     {
         $this->assertSame($expected, RoundingMode::round($mode, $input));
+    }
+
+    /**
+     * @dataProvider roundWithPrecisionDataProvider
+     */
+    public function testRoundWithPrecision(string $mode, float|int $input, int $precision, int $expected): void
+    {
+        $this->assertSame($expected, RoundingMode::round($mode, $input, $precision));
     }
 
     public function test_round_invalid_mode(): void

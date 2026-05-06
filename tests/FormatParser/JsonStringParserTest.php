@@ -5,6 +5,7 @@ namespace FromDevelopersForDevelopers\RelMon\Tests\FormatParser;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
 use FromDevelopersForDevelopers\RelMon\Enum\Scope;
+use FromDevelopersForDevelopers\RelMon\Exception\FormatParserWrongInputTypeException;
 use FromDevelopersForDevelopers\RelMon\FormatParser\JsonStringParser;
 use PHPUnit\Framework\TestCase;
 
@@ -106,5 +107,17 @@ class JsonStringParserTest extends TestCase
         $this->assertEquals('21.00', $component->getTax());
         $this->assertEquals('21.00', $component->getTaxRate());
         $this->assertEquals('Test component', $component->getComment());
+    }
+
+    public function testParseThrowsExceptionOnWrongNotation(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        (new JsonStringParser())->parse('[]');
+    }
+
+    public function testParseThrowsExceptionOnMalformedJson(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        (new JsonStringParser())->parse('{"protocol":');
     }
 }
