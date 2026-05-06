@@ -14,6 +14,15 @@ Official PHP SDK for [RelMon protocol](https://github.com/from-developers-for-de
 composer require from-developers-for-developers/relmon-php-sdk
 ```
 
+## Usage
+```php
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$relmon = RelMonFacade::build($input);
+```
+
+`RelMonFacade` wires the default parser and service stack for you. If you need custom dependency injection, use `RelMonService` directly.
+
 ## Features
 - Support for PHP 8.0, 8.1, 8.2, 8.3, 8.4.
 - Determinism Levels 1, 2, and 3 (DL1, DL2, DL3).
