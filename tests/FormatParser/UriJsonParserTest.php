@@ -40,7 +40,7 @@ class UriJsonParserTest extends TestCase
         $input = 'relmon-json://' . base64_encode($json);
 
         $dto = $parser->parse($input);
-        
+
         $this->assertEquals('1.0', $dto->protocolIdentifier);
         $this->assertEquals('100.00', $dto->net);
         $this->assertEquals('121.00', $dto->gross);
@@ -90,7 +90,7 @@ class UriJsonParserTest extends TestCase
         $input = 'relmon-json://' . base64_encode($json);
 
         $dto = $parser->parse($input);
-        
+
         $this->assertEquals('1.0', $dto->protocolIdentifier);
         $this->assertEquals('100.00', $dto->net);
         $this->assertEquals('121.00', $dto->gross);

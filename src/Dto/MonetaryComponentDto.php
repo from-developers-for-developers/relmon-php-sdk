@@ -10,9 +10,8 @@ class MonetaryComponentDto
         private null|string|int $gross = null,
         private null|string|int $tax = null,
         private null|string|int $taxRate = null,
-        private ?string         $comment = null,
-    )
-    {
+        private ?string $comment = null,
+    ) {
     }
 
     public function getNet(): null|string|int

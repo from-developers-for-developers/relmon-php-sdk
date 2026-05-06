@@ -11,19 +11,17 @@ use FromDevelopersForDevelopers\RelMon\ValueObject\ProtocolIdentifier;
 class CanonicalRelMonDto implements MonetaryBasisInterface
 {
     public function __construct(
-        private ProtocolIdentifier      $protocolIdentifier,
-        private string                  $scope,
-        private string                  $roundingMode,
-        private string                  $roundingApplication,
-        private MonetaryBasisInterface  $basis,
-        private int                     $precision,
-        private int                     $taxRatePrecision,
-        private ?string                 $unit,
-
+        private ProtocolIdentifier $protocolIdentifier,
+        private string $scope,
+        private string $roundingMode,
+        private string $roundingApplication,
+        private MonetaryBasisInterface $basis,
+        private int $precision,
+        private int $taxRatePrecision,
+        private ?string $unit,
         /** @var CanonicalMonetaryComponentDto[] */
-        private array                   $components = [],
-    )
-    {
+        private array $components = [],
+    ) {
     }
 
     public function getProtocolIdentifier(): ProtocolIdentifier

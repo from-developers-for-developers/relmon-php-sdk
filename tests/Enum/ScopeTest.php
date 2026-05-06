@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class ScopeTest extends TestCase
 {
-    public function test_values(): void
+    public function testValues(): void
     {
         $values = Scope::values();
         $this->assertCount(2, $values);
@@ -15,7 +15,7 @@ class ScopeTest extends TestCase
         $this->assertContains(Scope::COMPONENT, $values);
     }
 
-    public function test_tryFrom(): void
+    public function testTryFrom(): void
     {
         $this->assertSame(Scope::ROOT, Scope::tryFrom('r'));
         $this->assertSame(Scope::COMPONENT, Scope::tryFrom('c'));

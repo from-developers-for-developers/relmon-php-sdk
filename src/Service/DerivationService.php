@@ -23,10 +23,9 @@ class DerivationService
     }
 
     private function deriveDeterminismLevelOne(
-        CanonicalRelMonDto              $relmon,
+        CanonicalRelMonDto $relmon,
         MonetaryBasisInterface $basis,
-    ): DerivedResult
-    {
+    ): DerivedResult {
         $taxRate = $basis->getTaxRateInMinors();
 
         if (is_null($taxRate)) {
@@ -51,20 +50,32 @@ class DerivationService
                 $tax = RoundingMode::round($relmon->getRoundingMode(), $net * ($taxRate / $taxRateDivisor));
                 $calculatedGross = $net + $tax;
             } else {
-                $tax = RoundingMode::round($relmon->getRoundingMode(), $gross * $taxRate / ($taxRateDivisor + $taxRate));
+                $tax = RoundingMode::round(
+                    $relmon->getRoundingMode(),
+                    $gross * $taxRate / ($taxRateDivisor + $taxRate)
+                );
                 $calculatedNet = $gross - $tax;
             }
         } else {
             if (!is_null($net)) {
-                $calculatedGross = RoundingMode::round($relmon->getRoundingMode(), $net * ($taxRate / $taxRateDivisor + 1));
+                $calculatedGross = RoundingMode::round(
+                    $relmon->getRoundingMode(),
+                    $net * ($taxRate / $taxRateDivisor + 1)
+                );
                 $tax = $calculatedGross - $net;
             } else {
-                $calculatedNet = RoundingMode::round($relmon->getRoundingMode(), $gross / ($taxRate / $taxRateDivisor + 1));
+                $calculatedNet = RoundingMode::round(
+                    $relmon->getRoundingMode(),
+                    $gross / ($taxRate / $taxRateDivisor + 1)
+                );
                 $tax = $gross - $calculatedNet;
             }
         }
 
-        if ((!is_null($net) && $calculatedNet !== $net) || (!is_null($gross) && $calculatedGross !== $gross)) {
+        if (
+            (!is_null($net) && $calculatedNet !== $net)
+            || (!is_null($gross) && $calculatedGross !== $gross)
+        ) {
             throw new DerivationException('Calculated net/gross must be equal to the explicitly defined net/gross.');
         }
 
@@ -83,10 +94,9 @@ class DerivationService
     }
 
     private function deriveDeterminismLevelTwo(
-        CanonicalRelMonDto              $relmon,
+        CanonicalRelMonDto $relmon,
         MonetaryBasisInterface $basis,
-    ): DerivedResult
-    {
+    ): DerivedResult {
         $net = $basis->getNetInMinors();
         $gross = $basis->getGrossInMinors();
         $taxRate = $basis->getTaxRateInMinors();
@@ -109,14 +119,20 @@ class DerivationService
             $relmon->getRoundingApplication(),
         );
 
-        return new DerivedResult($net, $gross, $tax, $basis->getPrecision(), $basis->getTaxRatePrecision(), $taxRate);
+        return new DerivedResult(
+            $net,
+            $gross,
+            $tax,
+            $basis->getPrecision(),
+            $basis->getTaxRatePrecision(),
+            $taxRate
+        );
     }
 
     private function deriveDeterminismLevelThree(
-        CanonicalRelMonDto              $relmon,
+        CanonicalRelMonDto $relmon,
         MonetaryBasisInterface $basis,
-    ): DerivedResult
-    {
+    ): DerivedResult {
         if (
             is_null($basis->getTaxInMinors())
             || (is_null($basis->getNetInMinors()) && is_null($basis->getGrossInMinors()))
@@ -161,20 +177,21 @@ class DerivationService
     }
 
     private function validateReconstructedTax(
-        int                     $netInMinors,
-        int                     $grossInMinors,
-        int                     $taxInMinors,
-        int                     $taxRateInMinors,
-        int                     $taxRatePrecision,
-        string                  $roundingMode,
-        string                  $roundingApplication,
-    ): void
-    {
-        $taxInMinors ??= $grossInMinors - $netInMinors;
+        int $netInMinors,
+        int $grossInMinors,
+        int $taxInMinors,
+        int $taxRateInMinors,
+        int $taxRatePrecision,
+        string $roundingMode,
+        string $roundingApplication,
+    ): void {
         $taxRateDivisor = 100 * (10 ** $taxRatePrecision);
         $reconstructedTax = $roundingApplication === RoundingApplication::TAX
             ? RoundingMode::round($roundingMode, $netInMinors * ($taxRateInMinors / $taxRateDivisor))
-            : RoundingMode::round($roundingMode, $netInMinors * ($taxRateInMinors / $taxRateDivisor + 1)) - $netInMinors;
+            : RoundingMode::round(
+                $roundingMode,
+                $netInMinors * ($taxRateInMinors / $taxRateDivisor + 1)
+            ) - $netInMinors;
 
         if ($taxInMinors !== $reconstructedTax) {
             throw new DerivationException('The reconstruction of the tax amount has failed.');

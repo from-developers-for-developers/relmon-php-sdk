@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class RelMonDtoTest extends TestCase
 {
-    public function test_construct(): void
+    public function testConstruct(): void
     {
         $components = [new MonetaryComponentDto(100, 121, 21, 21)];
         $dto = new RelMonDto(

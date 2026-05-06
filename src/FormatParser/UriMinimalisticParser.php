@@ -22,9 +22,16 @@ class UriMinimalisticParser implements FormatParserInterface
         $input = explode(';', $input);
 
         if (count($input) !== 4) {
-            throw new FormatParserWrongInputTypeException('Minimalistic URI notation expects 4 parameters separated by semicolon.');
+            throw new FormatParserWrongInputTypeException(
+                'Minimalistic URI notation expects 4 parameters separated by semicolon.'
+            );
         }
 
-        return new RelMonDto(protocolIdentifier: "relmon@{$input[0]}", net: $input[1], gross: $input[2], tax: $input[3]);
+        return new RelMonDto(
+            protocolIdentifier: "relmon@{$input[0]}",
+            net: $input[1],
+            gross: $input[2],
+            tax: $input[3]
+        );
     }
 }

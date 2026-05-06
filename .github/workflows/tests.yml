@@ -10,6 +10,29 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    name: Quality checks
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: mbstring, xml
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: Run coding standards
+      run: composer cs
+
+    - name: Run quality checks
+      run: composer quality
+
   phpunit:
     runs-on: ubuntu-latest
     strategy:
@@ -31,7 +54,7 @@ jobs:
         ini-values: pcov.directory=src
 
     - name: Install dependencies
-      run: composer update --prefer-dist --no-progress
+      run: composer install --prefer-dist --no-progress --no-interaction
 
     - name: Run test suite
       run: vendor/bin/phpunit

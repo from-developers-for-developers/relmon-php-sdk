@@ -12,8 +12,7 @@ class MinorsService
         RelMonDto|MonetaryComponentDto $dto,
         int $precision,
         int $taxRatePrecision
-    ): MonetaryBasisInterface
-    {
+    ): MonetaryBasisInterface {
         // round() is used here to handle float imprecision, e.g. 20.40 * 100 = 2039.9999999999998
         $netInMinors = is_null($dto->getNet()) ? null : (int)round($dto->getNet() * (10 ** $precision));
         $grossInMinors = is_null($dto->getGross()) ? null : (int)round($dto->getGross() * (10 ** $precision));
@@ -24,7 +23,7 @@ class MinorsService
             $taxRateInMinors = (int)round($dto->getTaxRate() * (10 ** $taxRatePrecision));
         }
 
-        return new class(
+        return new class (
             $netInMinors,
             $grossInMinors,
             $taxInMinors,
@@ -39,8 +38,7 @@ class MinorsService
                 private ?int $taxRateInMinors,
                 private int $precision,
                 private int $taxRatePrecision,
-            )
-            {
+            ) {
             }
 
             public function getNetInMinors(): ?int

@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class DeterminismLevelTest extends TestCase
 {
-    public function test_values(): void
+    public function testValues(): void
     {
         $values = DeterminismLevel::values();
         $this->assertCount(3, $values);
@@ -16,7 +16,7 @@ class DeterminismLevelTest extends TestCase
         $this->assertContains(DeterminismLevel::DL3, $values);
     }
 
-    public function test_tryFrom(): void
+    public function testTryFrom(): void
     {
         $this->assertSame(DeterminismLevel::DL1, DeterminismLevel::tryFrom(1));
         $this->assertSame(DeterminismLevel::DL2, DeterminismLevel::tryFrom(2));

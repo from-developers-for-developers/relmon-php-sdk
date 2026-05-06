@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class CanonicalMonetaryComponentDtoTest extends TestCase
 {
-    public function test_construct(): void
+    public function testConstruct(): void
     {
         $basis = new DummyMonetaryBasis(100, 121, 21, 21, 2, 2);
         $dto = new CanonicalMonetaryComponentDto($basis, 'test comment');

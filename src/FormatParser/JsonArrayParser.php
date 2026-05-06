@@ -37,7 +37,9 @@ class JsonArrayParser implements FormatParserInterface
         }
 
         if ($application && !RoundingApplication::tryFrom($application)) {
-            throw new ValidationException([new ViolationDto("Invalid rounding application: $application", 'rounding.application')]);
+            throw new ValidationException([
+                new ViolationDto("Invalid rounding application: $application", 'rounding.application'),
+            ]);
         }
 
         $scope = $this->getAliasedValue($input, 'scope', 's');

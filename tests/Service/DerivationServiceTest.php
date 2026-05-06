@@ -48,7 +48,12 @@ class DerivationServiceTest extends TestCase
                 new DerivationException('Net + tax and/or gross + tax must be specified for DL3.'),
             ],
             [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100, taxInMinors: 2100, taxRateInMinors: 21000),
+                new DummyMonetaryBasis(
+                    netInMinors: 10000,
+                    grossInMinors: 12100,
+                    taxInMinors: 2100,
+                    taxRateInMinors: 21000
+                ),
                 'relmon@1.0.0/3',
                 RoundingMode::HALF_EVEN,
                 RoundingApplication::TAX,
@@ -56,7 +61,12 @@ class DerivationServiceTest extends TestCase
                 new DerivedResult(10000, 12100, 2100, 2, 3, 21000),
             ],
             [
-                new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100, taxInMinors: 2100, taxRateInMinors: 21010),
+                new DummyMonetaryBasis(
+                    netInMinors: 10000,
+                    grossInMinors: 12100,
+                    taxInMinors: 2100,
+                    taxRateInMinors: 21010
+                ),
                 'relmon@1.0.0/3',
                 RoundingMode::HALF_EVEN,
                 RoundingApplication::TAX,
@@ -184,16 +194,15 @@ class DerivationServiceTest extends TestCase
     /**
      * @dataProvider deriveDataProvider
      */
-    public function test_derive(
-        MonetaryBasisInterface  $basis,
-        string                  $protocolIdentifier,
-        string                  $roundingMode,
-        string                  $roundingApplication,
-        int                     $taxRatePrecision,
-        ?DerivedResult          $expectedResult,
-        ?\Exception             $exception = null
-    )
-    {
+    public function testDerive(
+        MonetaryBasisInterface $basis,
+        string $protocolIdentifier,
+        string $roundingMode,
+        string $roundingApplication,
+        int $taxRatePrecision,
+        ?DerivedResult $expectedResult,
+        ?\Exception $exception = null
+    ) {
         $service = new DerivationService();
         $pi = new ProtocolIdentifier($protocolIdentifier);
 

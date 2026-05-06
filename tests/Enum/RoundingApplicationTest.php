@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class RoundingApplicationTest extends TestCase
 {
-    public function test_values(): void
+    public function testValues(): void
     {
         $values = RoundingApplication::values();
         $this->assertCount(2, $values);
@@ -15,7 +15,7 @@ class RoundingApplicationTest extends TestCase
         $this->assertContains(RoundingApplication::TOTAL, $values);
     }
 
-    public function test_tryFrom(): void
+    public function testTryFrom(): void
     {
         $this->assertSame(RoundingApplication::TAX, RoundingApplication::tryFrom('tax'));
         $this->assertSame(RoundingApplication::TOTAL, RoundingApplication::tryFrom('total'));

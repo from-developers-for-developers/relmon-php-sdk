@@ -53,7 +53,9 @@ class ProtocolIdentifier
         $protocolOptions = explode(':', $protocolOptions);
 
         if (count($protocolOptions) > 2 || count($protocolOptions) < 1) {
-            throw new ProtocolIdentifierInvalidException('Protocol options should be in format "determinismLevel[?:mode1[?.mode2...]]".');
+            throw new ProtocolIdentifierInvalidException(
+                'Protocol options should be in format "determinismLevel[?:mode1[?.mode2...]]".'
+            );
         }
 
         $determinismLevel = (int)$protocolOptions[0];
@@ -75,7 +77,9 @@ class ProtocolIdentifier
             }
 
             if (count($modes) - $modesActive > 0) {
-                throw new ProtocolIdentifierInvalidException('Only "c" and "m" modes are allowed in ProtocolIdentifier.');
+                throw new ProtocolIdentifierInvalidException(
+                    'Only "c" and "m" modes are allowed in ProtocolIdentifier.'
+                );
             }
         }
 

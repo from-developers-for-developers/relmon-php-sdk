@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class FormatTest extends TestCase
 {
-    public function test_values(): void
+    public function testValues(): void
     {
         $values = Format::values();
         $this->assertGreaterThan(5, count($values));
@@ -16,7 +16,7 @@ class FormatTest extends TestCase
         $this->assertContains(Format::XML_STRING, $values);
     }
 
-    public function test_tryFrom(): void
+    public function testTryFrom(): void
     {
         $this->assertSame(Format::AUTO, Format::tryFrom('auto'));
         $this->assertSame(Format::JSON_ARRAY, Format::tryFrom(Format::JSON_ARRAY));

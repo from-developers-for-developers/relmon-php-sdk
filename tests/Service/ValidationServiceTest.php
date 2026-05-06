@@ -129,8 +129,7 @@ class ValidationServiceTest extends TestCase
         RelMonDto $dto,
         string $expectedMessage,
         string $expectedField
-    ): void
-    {
+    ): void {
         $violations = (new ValidationService())->validate($protocolIdentifier, $dto);
 
         $this->assertNotEmpty($violations);

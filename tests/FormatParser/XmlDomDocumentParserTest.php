@@ -14,8 +14,12 @@ class XmlDomDocumentParserTest extends TestCase
     /**
      * @dataProvider provideDomDocuments
      */
-    public function testParse(\DOMDocument $document, string $protocolIdentifier, string $scope, string $roundingMode): void
-    {
+    public function testParse(
+        \DOMDocument $document,
+        string $protocolIdentifier,
+        string $scope,
+        string $roundingMode
+    ): void {
         $dto = (new XmlDomDocumentParser())->parse($document);
 
         $this->assertEquals($protocolIdentifier, $dto->protocolIdentifier);

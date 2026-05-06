@@ -62,39 +62,57 @@ class ValidationService
         $signs = array_unique(array_map(fn($field) => (float)$field < 0 ? '-' : '+', $fields));
 
         if (count($signs) > 1) {
-            return [new ViolationDto('Net, gross and tax fields of root and component levels must have the same sign.')];
+            return [
+                new ViolationDto('Net, gross and tax fields of root and component levels must have the same sign.'),
+            ];
         }
 
         $types = array_unique(array_map('gettype', $fields));
 
         if (count($types) > 1) {
-            return [new ViolationDto('Net, gross and tax fields of root and component levels must be of the same type.')];
+            return [
+                new ViolationDto('Net, gross and tax fields of root and component levels must be of the same type.'),
+            ];
         }
 
         $type = reset($types);
 
         if ($protocolIdentifier->isInMinorsMode()) {
             if ($type !== 'integer') {
-                return [new ViolationDto('Net, gross and tax of root and component levels in minors mode must be of type integer.')];
+                return [
+                    new ViolationDto(
+                        'Net, gross and tax of root and component levels in minors mode must be of type integer.'
+                    ),
+                ];
             }
         } else {
             if ($type !== 'string') {
-                return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal (string).')];
+                return [
+                    new ViolationDto(
+                        'Net, gross and tax of root and component levels must be of type decimal (string).'
+                    ),
+                ];
             }
 
             $decimalPlaces = [];
 
             foreach ($fields as $field) {
                 if (!preg_match('/^-?\d+\.\d+$/', $field)) {
-                    return [new ViolationDto('Net, gross and tax of root and component levels must be of type decimal.')];
+                    return [
+                        new ViolationDto('Net, gross and tax of root and component levels must be of type decimal.'),
+                    ];
                 }
 
                 $parts = explode('.', $field);
                 $decimalPlaces[] = strlen($parts[1]);
             }
 
-            if (!is_null($dto->precision) && !empty($decimalPlaces) && max($decimalPlaces) > $dto->precision) {
-                return [new ViolationDto('Decimal places of net, gross and tax values must not exceed the given precision.')];
+            if (!is_null($dto->precision) && max($decimalPlaces) > $dto->precision) {
+                return [
+                    new ViolationDto(
+                        'Decimal places of net, gross and tax values must not exceed the given precision.'
+                    ),
+                ];
             }
         }
 
@@ -102,16 +120,17 @@ class ValidationService
     }
 
     private function validateMonetaryBasis(
-        ProtocolIdentifier             $protocolIdentifier,
+        ProtocolIdentifier $protocolIdentifier,
         RelMonDto|MonetaryComponentDto $dto,
-        string                         $violationField = ''
-    ): array
-    {
+        string $violationField = ''
+    ): array {
         $determinismLevel = $protocolIdentifier->getDeterminismLevel();
 
         if ($determinismLevel === DeterminismLevel::DL1) {
             if (is_null($dto->getTaxRate())) {
-                return [new ViolationDto('Tax rate must be specified for DL1.', trim("{$violationField}.taxRate", '.'))];
+                return [
+                    new ViolationDto('Tax rate must be specified for DL1.', trim("{$violationField}.taxRate", '.')),
+                ];
             }
 
             if (is_null($dto->getNet()) && is_null($dto->getGross())) {
@@ -119,7 +138,9 @@ class ValidationService
             }
         } elseif ($determinismLevel === DeterminismLevel::DL2) {
             if (is_null($dto->getTaxRate())) {
-                return [new ViolationDto('Tax rate must be specified for DL2.', trim("{$violationField}.taxRate", '.'))];
+                return [
+                    new ViolationDto('Tax rate must be specified for DL2.', trim("{$violationField}.taxRate", '.')),
+                ];
             }
 
             if (is_null($dto->getNet()) || is_null($dto->getGross())) {
@@ -136,7 +157,9 @@ class ValidationService
         }
 
         if (!is_null($dto->getTaxRate()) && !preg_match('/^\d+(\.\d+)?$/', (string)$dto->getTaxRate())) {
-            return [new ViolationDto('Tax rate must be a non-negative decimal.', trim("{$violationField}.taxRate", '.'))];
+            return [
+                new ViolationDto('Tax rate must be a non-negative decimal.', trim("{$violationField}.taxRate", '.')),
+            ];
         }
 
         if ($dto instanceof RelMonDto && $dto->scope === Scope::COMPONENT) {
@@ -171,21 +194,41 @@ class ValidationService
 
         if (!is_null($net) && !is_null($gross)) {
             if ((float)$net >= 0 && (float)$gross < (float)$net) {
-                return [new ViolationDto('Gross must be greater than or equal to net for positive amounts.', trim("{$violationField}.gross", '.'))];
+                return [
+                    new ViolationDto(
+                        'Gross must be greater than or equal to net for positive amounts.',
+                        trim("{$violationField}.gross", '.')
+                    ),
+                ];
             }
 
             if ((float)$net < 0 && (float)$gross > (float)$net) {
-                return [new ViolationDto('Gross must be less than or equal to net for negative amounts.', trim("{$violationField}.gross", '.'))];
+                return [
+                    new ViolationDto(
+                        'Gross must be less than or equal to net for negative amounts.',
+                        trim("{$violationField}.gross", '.')
+                    ),
+                ];
             }
         }
 
         if (!is_null($gross) && !is_null($tax)) {
             if ((float)$gross >= 0 && (float)$tax > (float)$gross) {
-                return [new ViolationDto('Tax must be less than or equal to gross for positive amounts.', trim("{$violationField}.tax", '.'))];
+                return [
+                    new ViolationDto(
+                        'Tax must be less than or equal to gross for positive amounts.',
+                        trim("{$violationField}.tax", '.')
+                    ),
+                ];
             }
 
             if ((float)$gross < 0 && (float)$tax < (float)$gross) {
-                return [new ViolationDto('Tax must be greater than or equal to gross for negative amounts.', trim("{$violationField}.tax", '.'))];
+                return [
+                    new ViolationDto(
+                        'Tax must be greater than or equal to gross for negative amounts.',
+                        trim("{$violationField}.tax", '.')
+                    ),
+                ];
             }
         }
 

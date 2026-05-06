@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class RoundingModeTest extends TestCase
 {
-    public function test_values(): void
+    public function testValues(): void
     {
         $values = RoundingMode::values();
         $this->assertCount(5, $values);
@@ -18,7 +18,7 @@ class RoundingModeTest extends TestCase
         $this->assertContains(RoundingMode::DOWN, $values);
     }
 
-    public function test_tryFrom(): void
+    public function testTryFrom(): void
     {
         $this->assertSame(RoundingMode::HALF_AWAY_FROM_ZERO, RoundingMode::tryFrom('haway'));
         $this->assertSame(RoundingMode::HALF_TOWARDS_ZERO, RoundingMode::tryFrom('hzero'));
@@ -61,7 +61,7 @@ class RoundingModeTest extends TestCase
     /**
      * @dataProvider roundDataProvider
      */
-    public function test_round(string $mode, float|int $input, int $expected): void
+    public function testRound(string $mode, float|int $input, int $expected): void
     {
         $this->assertSame($expected, RoundingMode::round($mode, $input));
     }
@@ -74,7 +74,7 @@ class RoundingModeTest extends TestCase
         $this->assertSame($expected, RoundingMode::round($mode, $input, $precision));
     }
 
-    public function test_round_invalid_mode(): void
+    public function testRoundInvalidMode(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         RoundingMode::round('invalid', 1.5);

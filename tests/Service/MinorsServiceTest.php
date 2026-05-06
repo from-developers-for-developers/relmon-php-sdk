@@ -32,13 +32,12 @@ class MinorsServiceTest extends TestCase
     /**
      * @dataProvider toMinorsDataProvider
      */
-    public function test_toMinors(
+    public function testToMinors(
         RelMonDto $dto,
         int $precision,
         int $taxRatePrecision,
         MonetaryBasisInterface $expectedBasis
-    ): void
-    {
+    ): void {
         $service = new MinorsService();
         $resultBasis = $service->toMinors($dto, $precision, $taxRatePrecision);
 

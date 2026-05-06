@@ -79,8 +79,11 @@ XML;
     /**
      * @dataProvider buildAutoDetectDataProvider
      */
-    public function testBuildAutoDetectsSupportedFormats(mixed $input, ?string $expectedUnit, int $expectedPrecision): void
-    {
+    public function testBuildAutoDetectsSupportedFormats(
+        mixed $input,
+        ?string $expectedUnit,
+        int $expectedPrecision
+    ): void {
         $relmon = $this->createService()->build($input);
 
         $this->assertSame(10000, $relmon->getNet());

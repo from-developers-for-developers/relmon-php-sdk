@@ -39,7 +39,7 @@ class JsonStringParserTest extends TestCase
         ]);
 
         $dto = $parser->parse($input);
-        
+
         $this->assertEquals('1.0', $dto->protocolIdentifier);
         $this->assertEquals('100.00', $dto->net);
         $this->assertEquals('121.00', $dto->gross);
@@ -51,7 +51,7 @@ class JsonStringParserTest extends TestCase
         $this->assertEquals(RoundingMode::UP, $dto->roundingMode);
         $this->assertEquals(RoundingApplication::TAX, $dto->roundingApplication);
         $this->assertCount(1, $dto->components);
-        
+
         $component = $dto->components[0];
         $this->assertEquals('100.00', $component->getNet());
         $this->assertEquals('121.00', $component->getGross());
@@ -88,7 +88,7 @@ class JsonStringParserTest extends TestCase
         ]);
 
         $dto = $parser->parse($input);
-        
+
         $this->assertEquals('1.0', $dto->protocolIdentifier);
         $this->assertEquals('100.00', $dto->net);
         $this->assertEquals('121.00', $dto->gross);

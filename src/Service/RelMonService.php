@@ -24,11 +24,10 @@ class RelMonService
 {
     public function __construct(
         private FormatParserFactory $formatParserFactory,
-        private ValidationService   $validationService,
-        private MinorsService       $minorsService,
-        private DerivationService   $derivationService,
-    )
-    {
+        private ValidationService $validationService,
+        private MinorsService $minorsService,
+        private DerivationService $derivationService,
+    ) {
     }
 
     public function build(mixed $input, string $formatEnum = Format::AUTO): RelMonObject
@@ -235,11 +234,10 @@ class RelMonService
     }
 
     private function getMinorNumbers(
-        CanonicalRelMonDto     $CanonicalRelMonDto,
+        CanonicalRelMonDto $CanonicalRelMonDto,
         MonetaryBasisInterface $basis,
-        bool                   $derive
-    ): array
-    {
+        bool $derive
+    ): array {
         $net = $basis->getNetInMinors();
         $gross = $basis->getGrossInMinors();
         $tax = $basis->getTaxInMinors();

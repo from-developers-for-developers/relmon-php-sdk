@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class MonetaryComponentTest extends TestCase
 {
-    public function test_construct(): void
+    public function testConstruct(): void
     {
         $component = new MonetaryComponent(100, 121, 21, 21, 'comment');
         $this->assertSame(100, $component->getNet());

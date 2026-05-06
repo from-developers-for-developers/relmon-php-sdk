@@ -9,9 +9,8 @@ class CanonicalMonetaryComponentDto implements MonetaryBasisInterface
 {
     public function __construct(
         private MonetaryBasisInterface $basis,
-        private ?string                $comment = null,
-    )
-    {
+        private ?string $comment = null,
+    ) {
     }
 
     public function getNetInMinors(): ?int

@@ -13,16 +13,16 @@ class FormatParserLocatorTest extends TestCase
     {
         $jsonParser = new JsonStringParser();
         $locator = new FormatParserLocator([$jsonParser]);
-        
+
         $parser = $locator->getFormatParserByFormat(JsonStringParser::class);
-        
+
         $this->assertSame($jsonParser, $parser);
     }
 
     public function testGetFormatParserThrowsException(): void
     {
         $locator = new FormatParserLocator([]);
-        
+
         $this->expectException(FormatParserNotLocatedException::class);
         $locator->getFormatParserByFormat('NonExistentParser');
     }

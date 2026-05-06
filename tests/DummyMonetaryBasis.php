@@ -13,8 +13,7 @@ class DummyMonetaryBasis implements MonetaryBasisInterface
         private ?int $taxRateInMinors = null,
         private int $precision = 2,
         private int $taxRatePrecision = 2,
-    )
-    {
+    ) {
     }
 
     public function getNetInMinors(): ?int

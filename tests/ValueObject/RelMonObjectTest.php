@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 class RelMonObjectTest extends TestCase
 {
-    public function test_construct(): void
+    public function testConstruct(): void
     {
         $components = [new MonetaryComponent(100, 121, 21, 21, 'test')];
         $relmon = new RelMonObject(
@@ -39,10 +39,10 @@ class RelMonObjectTest extends TestCase
         $this->assertSame($components, $relmon->getComponents());
     }
 
-    public function test_construct_default(): void
+    public function testConstructDefault(): void
     {
         $relmon = new RelMonObject(1000, 1210, 210);
-        
+
         $this->assertSame(1000, $relmon->getNet());
         $this->assertSame(Scope::ROOT, $relmon->getScope());
         $this->assertSame(RoundingMode::HALF_EVEN, $relmon->getRoundingMode());

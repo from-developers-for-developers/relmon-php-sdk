@@ -8,14 +8,13 @@ use FromDevelopersForDevelopers\RelMon\Interface\MonetaryBasisInterface;
 class DerivedResult implements MonetaryBasisInterface
 {
     public function __construct(
-        private int  $net,
-        private int  $gross,
-        private int  $tax,
-        private int  $precision,
-        private int  $taxRatePrecision,
+        private int $net,
+        private int $gross,
+        private int $tax,
+        private int $precision,
+        private int $taxRatePrecision,
         private ?int $taxRate = null,
-    )
-    {
+    ) {
     }
 
     public function getNetInMinors(): ?int

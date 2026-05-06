@@ -9,20 +9,18 @@ use FromDevelopersForDevelopers\RelMon\Enum\Scope;
 class RelMonObject
 {
     public function __construct(
-        private int    $net,
-        private int    $gross,
-        private int    $tax,
-        private ?int   $taxRate = null,
+        private int $net,
+        private int $gross,
+        private int $tax,
+        private ?int $taxRate = null,
         private ?string $unit = null,
-        private ?int   $precision = null,
+        private ?int $precision = null,
         private string $scope = Scope::ROOT,
         private string $roundingMode = RoundingMode::HALF_EVEN,
         private string $roundingApplication = RoundingApplication::TAX,
-
         /** @var MonetaryComponent[] */
-        private array  $components = [],
-    )
-    {
+        private array $components = [],
+    ) {
     }
 
     public function getNet(): int

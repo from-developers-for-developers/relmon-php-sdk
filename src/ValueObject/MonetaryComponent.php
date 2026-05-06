@@ -5,13 +5,12 @@ namespace FromDevelopersForDevelopers\RelMon\ValueObject;
 class MonetaryComponent
 {
     public function __construct(
-        private ?int    $net,
-        private ?int    $gross,
-        private ?int    $tax,
-        private ?int    $taxRate = null,
+        private ?int $net,
+        private ?int $gross,
+        private ?int $tax,
+        private ?int $taxRate = null,
         private ?string $comment = null,
-    )
-    {
+    ) {
     }
 
     public function getNet(): ?int

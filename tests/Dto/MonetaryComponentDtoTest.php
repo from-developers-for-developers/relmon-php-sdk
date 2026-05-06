@@ -19,7 +19,7 @@ class MonetaryComponentDtoTest extends TestCase
     /**
      * @dataProvider constructDataProvider
      */
-    public function test_construct(?int $net, ?int $gross, ?int $tax, ?int $taxRate = null, ?string $comment = null)
+    public function testConstruct(?int $net, ?int $gross, ?int $tax, ?int $taxRate = null, ?string $comment = null)
     {
         $dto = new MonetaryComponentDto($net, $gross, $tax, $taxRate, $comment);
 

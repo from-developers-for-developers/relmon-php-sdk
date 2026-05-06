@@ -18,8 +18,14 @@ class DerivedResultTest extends TestCase
     /**
      * @dataProvider constructDataProvider
      */
-    public function test_construct(int $net, int $gross, int $tax, int $precision, int $taxRatePrecision, ?int $taxRate = null)
-    {
+    public function testConstruct(
+        int $net,
+        int $gross,
+        int $tax,
+        int $precision,
+        int $taxRatePrecision,
+        ?int $taxRate = null
+    ) {
         $dto = new DerivedResult($net, $gross, $tax, $precision, $taxRatePrecision, $taxRate);
 
         $this->assertSame($net, $dto->getNetInMinors());

@@ -15,8 +15,12 @@ class XmlSimpleXmlParserTest extends TestCase
     /**
      * @dataProvider provideXmlElements
      */
-    public function testParse(\SimpleXMLElement $xml, string $protocolIdentifier, string $scope, string $roundingMode): void
-    {
+    public function testParse(
+        \SimpleXMLElement $xml,
+        string $protocolIdentifier,
+        string $scope,
+        string $roundingMode
+    ): void {
         $parser = new XmlSimpleXmlParser();
 
         $dto = $parser->parse($xml);
