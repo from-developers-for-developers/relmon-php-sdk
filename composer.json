@@ -33,7 +33,7 @@
     "scripts": {
         "cs": "phpcs",
         "cs-fix": "phpcbf",
-        "lint": "vendor/bin/parallel-lint --exclude vendor src tests",
+        "lint": "vendor/bin/parallel-lint -p php --exclude vendor src tests",
         "analyse": "phpstan analyse --configuration=phpstan.neon.dist --memory-limit=512M",
         "quality": [
             "@lint",
