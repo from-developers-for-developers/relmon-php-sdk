@@ -15,6 +15,7 @@ class RelMonObject
         private ?int $taxRate = null,
         private ?string $unit = null,
         private ?int $precision = null,
+        private ?int $taxRatePrecision = null,
         private string $scope = Scope::ROOT,
         private string $roundingMode = RoundingMode::HALF_EVEN,
         private string $roundingApplication = RoundingApplication::TAX,
@@ -53,6 +54,11 @@ class RelMonObject
         return $this->precision;
     }
 
+    public function getTaxRatePrecision(): ?int
+    {
+        return $this->taxRatePrecision;
+    }
+
     public function getScope(): string
     {
         return $this->scope;
@@ -71,5 +77,64 @@ class RelMonObject
     public function getComponents(): array
     {
         return $this->components;
+    }
+
+    public function getNetFormatted(string $decimalSeparator = '.', string $thousandsSeparator = ''): string
+    {
+        return $this->formatValue($this->net, $this->precision ?? 0, $decimalSeparator, $thousandsSeparator);
+    }
+
+    public function getGrossFormatted(string $decimalSeparator = '.', string $thousandsSeparator = ''): string
+    {
+        return $this->formatValue($this->gross, $this->precision ?? 0, $decimalSeparator, $thousandsSeparator);
+    }
+
+    public function getTaxFormatted(string $decimalSeparator = '.', string $thousandsSeparator = ''): string
+    {
+        return $this->formatValue($this->tax, $this->precision ?? 0, $decimalSeparator, $thousandsSeparator);
+    }
+
+    public function getTaxRateFormatted(string $decimalSeparator = '.', string $thousandsSeparator = ''): ?string
+    {
+        return $this->formatValue($this->taxRate, $this->taxRatePrecision ?? 0, $decimalSeparator, $thousandsSeparator);
+    }
+
+    private function formatValue(
+        ?int $value,
+        int $precision,
+        string $decimalSeparator,
+        string $thousandsSeparator
+    ): ?string {
+        if (is_null($value)) {
+            return null;
+        }
+
+        $sign = $value < 0 ? '-' : '';
+        $digits = (string)abs($value);
+
+        if ($precision === 0) {
+            return $sign . $this->addThousandsSeparator($digits, $thousandsSeparator);
+        }
+
+        $digits = str_pad($digits, $precision + 1, '0', STR_PAD_LEFT);
+        $whole = substr($digits, 0, -$precision);
+        $fraction = substr($digits, -$precision);
+
+        return sprintf(
+            '%s%s%s%s',
+            $sign,
+            $this->addThousandsSeparator($whole, $thousandsSeparator),
+            $decimalSeparator,
+            $fraction
+        );
+    }
+
+    private function addThousandsSeparator(string $digits, string $thousandsSeparator): string
+    {
+        if ($thousandsSeparator === '') {
+            return $digits;
+        }
+
+        return preg_replace('/\B(?=(\d{3})+(?!\d))/', $thousandsSeparator, $digits) ?? $digits;
     }
 }

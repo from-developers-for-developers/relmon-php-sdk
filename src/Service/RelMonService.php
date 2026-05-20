@@ -54,7 +54,15 @@ class RelMonService
                     $canonicalDto->getScope() === Scope::COMPONENT
                 );
 
-                $components[] = new MonetaryComponent($net, $gross, $tax, $taxRate, $component->getComment());
+                $components[] = new MonetaryComponent(
+                    $net,
+                    $gross,
+                    $tax,
+                    $taxRate,
+                    $component->getComment(),
+                    $canonicalDto->getPrecision(),
+                    $component->getTaxRatePrecision(),
+                );
             }
 
             list($net, $gross, $tax, $taxRate) = $this->getMinorNumbers(
@@ -70,6 +78,7 @@ class RelMonService
                 taxRate: $taxRate,
                 unit: $canonicalDto->getUnit(),
                 precision: $canonicalDto->getPrecision(),
+                taxRatePrecision: $canonicalDto->getTaxRatePrecision(),
                 scope: $canonicalDto->getScope(),
                 roundingMode: $canonicalDto->getRoundingMode(),
                 roundingApplication: $canonicalDto->getRoundingApplication(),

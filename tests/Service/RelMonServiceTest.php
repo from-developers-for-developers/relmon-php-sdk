@@ -181,6 +181,8 @@ XML;
         $this->assertSame(2100, $relmon->getTax());
         $this->assertSame(21, $relmon->getTaxRate());
         $this->assertSame(2, $relmon->getPrecision());
+        $this->assertSame('100.00', $relmon->getNetFormatted());
+        $this->assertSame('21', $relmon->getTaxRateFormatted());
     }
 
     public function testBuildInfersPrecisionFromComponentsUsingMaximumScale(): void
@@ -214,6 +216,8 @@ XML;
         $this->assertSame(6000, $relmon->getComponents()[1]->getNet());
         $this->assertSame(7260, $relmon->getComponents()[1]->getGross());
         $this->assertSame(1260, $relmon->getComponents()[1]->getTax());
+        $this->assertSame('48.40', $relmon->getComponents()[0]->getGrossFormatted());
+        $this->assertSame('21', $relmon->getComponents()[0]->getTaxRateFormatted());
     }
 
     public function testBuildThrowsValidationExceptionForValidationViolations(): void
