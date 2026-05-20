@@ -49,22 +49,31 @@ class ValidationService
     {
         $fields = [$dto->getNet(), $dto->getGross(), $dto->getTax()];
 
-        foreach ($dto->components as $component) {
-            $fields = array_merge($fields, [$component->getNet(), $component->getGross(), $component->getTax()]);
+        $violations = $this->validateSigns($fields);
+
+        if (!empty($violations)) {
+            return $violations;
+        }
+
+        foreach ($dto->components as $k => $component) {
+            $componentFields = array_filter(
+                [$component->getNet(), $component->getGross(), $component->getTax()],
+                fn($field) => !is_null($field)
+            );
+
+            $violations = $this->validateSigns($componentFields, "components.{$k}");
+
+            if (!empty($violations)) {
+                return $violations;
+            }
+
+            $fields = array_merge($fields, $componentFields);
         }
 
         $fields = array_filter($fields, fn($field) => !is_null($field));
 
         if (empty($fields)) {
             return [];
-        }
-
-        $signs = array_unique(array_map(fn($field) => (float)$field < 0 ? '-' : '+', $fields));
-
-        if (count($signs) > 1) {
-            return [
-                new ViolationDto('Net, gross and tax fields of root and component levels must have the same sign.'),
-            ];
         }
 
         $types = array_unique(array_map('gettype', $fields));
@@ -114,6 +123,28 @@ class ValidationService
                     ),
                 ];
             }
+        }
+
+        return [];
+    }
+
+    private function validateSigns(array $fields, string $violationField = ''): array
+    {
+        $fields = array_filter($fields, fn($field) => !is_null($field));
+
+        if (empty($fields)) {
+            return [];
+        }
+
+        $signs = array_unique(array_map(fn($field) => (float)$field < 0 ? '-' : '+', $fields));
+
+        if (count($signs) > 1) {
+            return [
+                new ViolationDto(
+                    'Net, gross and tax fields on the same level must have the same sign.',
+                    trim($violationField, '.')
+                ),
+            ];
         }
 
         return [];

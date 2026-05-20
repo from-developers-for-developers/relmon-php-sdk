@@ -43,7 +43,13 @@ class ValidationServiceTest extends TestCase
                 'Components are required if the scope is "c".',
                 '.components',
             ],
-            'mixed signs' => [
+            'mixed signs on the same root level' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto('relmon@1.0.0/3', '100.00', '121.00', '-21.00', '21.00'),
+                'Net, gross and tax fields on the same level must have the same sign.',
+                '.',
+            ],
+            'mixed signs between root and components are allowed' => [
                 new ProtocolIdentifier('relmon@1.0.0/3'),
                 new RelMonDto(
                     'relmon@1.0.0/3',
@@ -53,8 +59,20 @@ class ValidationServiceTest extends TestCase
                     '21.00',
                     components: [new MonetaryComponentDto('-10.00', '-12.10', '-2.10')]
                 ),
-                'Net, gross and tax fields of root and component levels must have the same sign.',
-                '.',
+                '',
+            ],
+            'mixed signs on the same component level' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto(
+                    'relmon@1.0.0/3',
+                    '100.00',
+                    '121.00',
+                    '21.00',
+                    '21.00',
+                    components: [new MonetaryComponentDto('-10.00', '12.10', '-2.10')]
+                ),
+                'Net, gross and tax fields on the same level must have the same sign.',
+                '.components.0',
             ],
             'mixed types' => [
                 new ProtocolIdentifier('relmon@1.0.0/3'),
@@ -127,10 +145,16 @@ class ValidationServiceTest extends TestCase
     public function testValidate(
         ProtocolIdentifier $protocolIdentifier,
         RelMonDto $dto,
-        string $expectedMessage,
-        string $expectedField
+        string $expectedMessage = '',
+        string $expectedField = ''
     ): void {
         $violations = (new ValidationService())->validate($protocolIdentifier, $dto);
+
+        if ($expectedMessage === '') {
+            $this->assertSame([], $violations);
+
+            return;
+        }
 
         $this->assertNotEmpty($violations);
         $this->assertSame($expectedMessage, $violations[0]->getMessage());
