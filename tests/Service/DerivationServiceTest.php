@@ -105,6 +105,15 @@ class DerivationServiceTest extends TestCase
                 new DerivationException('Tax rate must be specified for DL1.')
             ],
             [
+                new DummyMonetaryBasis(taxRateInMinors: 2100),
+                'relmon@1.0.0/1',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
+                2,
+                null,
+                new DerivationException('Net or gross must be specified for DL1.')
+            ],
+            [
                 new DummyMonetaryBasis(netInMinors: 10000, taxRateInMinors: 2100),
                 'relmon@1.0.0/1',
                 RoundingMode::HALF_EVEN,
@@ -128,6 +137,15 @@ class DerivationServiceTest extends TestCase
                 2,
                 null,
                 new DerivationException('Calculated net/gross must be equal to the explicitly defined net/gross.'),
+            ],
+            [
+                new DummyMonetaryBasis(netInMinors: 12100, grossInMinors: 10000, taxRateInMinors: 2100),
+                'relmon@1.0.0/1',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
+                2,
+                null,
+                new DerivationException('Gross must be greater than or equal to net.'),
             ],
             [
                 new DummyMonetaryBasis(netInMinors: 10000, taxRateInMinors: 2100),
@@ -178,6 +196,15 @@ class DerivationServiceTest extends TestCase
                 2,
                 null,
                 new DerivationException('Gross must be greater then or equal to net (arithmetic check).'),
+            ],
+            [
+                new DummyMonetaryBasis(netInMinors: 10000, taxInMinors: 2100),
+                'relmon@1.0.0/3',
+                RoundingMode::HALF_EVEN,
+                RoundingApplication::TAX,
+                2,
+                null,
+                new DerivationException('Net + tax must be equal to gross.'),
             ],
             [
                 new DummyMonetaryBasis(netInMinors: 10000, grossInMinors: 12100, taxInMinors: 2100),

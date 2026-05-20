@@ -80,6 +80,12 @@ XML,
         (new UriXmlParser())->parse('relmon-json://abcd');
     }
 
+    public function testParseThrowsExceptionOnWrongInputType(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        (new UriXmlParser())->parse(new \stdClass());
+    }
+
     public function testParseThrowsExceptionOnEmptyPayload(): void
     {
         $this->expectException(FormatParserWrongInputTypeException::class);

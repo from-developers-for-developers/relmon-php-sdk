@@ -17,12 +17,6 @@ class XmlDomDocumentParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('DOMDocument must contain a root element.');
         }
 
-        $xml = simplexml_import_dom($input->documentElement);
-
-        if (!$xml instanceof \SimpleXMLElement) {
-            throw new FormatParserWrongInputTypeException('Could not parse DOMDocument.');
-        }
-
-        return (new XmlSimpleXmlParser())->parse($xml);
+        return (new XmlSimpleXmlParser())->parse(simplexml_import_dom($input->documentElement));
     }
 }

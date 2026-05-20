@@ -80,6 +80,17 @@ class ValidationServiceTest extends TestCase
                 'Net, gross and tax fields of root and component levels must be of the same type.',
                 '.',
             ],
+            'all monetary fields missing for unsupported determinism are allowed' => [
+                new ProtocolIdentifier('relmon@1.0.0/99'),
+                new RelMonDto('relmon@1.0.0/99'),
+                '',
+            ],
+            'integers in non-minors mode require decimal strings' => [
+                new ProtocolIdentifier('relmon@1.0.0/99'),
+                new RelMonDto('relmon@1.0.0/99', 10000, 12100, 2100),
+                'Net, gross and tax of root and component levels must be of type decimal (string).',
+                '.',
+            ],
             'minors mode requires integers' => [
                 new ProtocolIdentifier('relmon@1.0.0/3:m'),
                 new RelMonDto('relmon@1.0.0/3:m', '100.00', '121.00', '21.00'),
@@ -103,6 +114,56 @@ class ValidationServiceTest extends TestCase
                 new RelMonDto('relmon@1.0.0/1', '100.00'),
                 'Tax rate must be specified for DL1.',
                 '.taxRate',
+            ],
+            'dl1 missing net and gross' => [
+                new ProtocolIdentifier('relmon@1.0.0/1'),
+                new RelMonDto('relmon@1.0.0/1', taxRate: '21.00'),
+                'Net or gross must be specified for DL1.',
+                '.',
+            ],
+            'dl2 missing tax rate' => [
+                new ProtocolIdentifier('relmon@1.0.0/2'),
+                new RelMonDto('relmon@1.0.0/2', '100.00', '121.00'),
+                'Tax rate must be specified for DL2.',
+                '.taxRate',
+            ],
+            'dl2 missing gross' => [
+                new ProtocolIdentifier('relmon@1.0.0/2'),
+                new RelMonDto('relmon@1.0.0/2', '100.00', taxRate: '21.00'),
+                'Net and gross must be specified for DL2.',
+                '.',
+            ],
+            'dl3 missing net and gross' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto('relmon@1.0.0/3', tax: '21.00'),
+                'Net or gross must be specified for DL3.',
+                '.',
+            ],
+            'dl3 missing tax' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto('relmon@1.0.0/3', '100.00'),
+                'Tax must be specified for DL3.',
+                '.tax',
+            ],
+            'negative tax rate is invalid' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto('relmon@1.0.0/3', '100.00', '121.00', '21.00', '-21.00'),
+                'Tax rate must be a non-negative decimal.',
+                '.taxRate',
+            ],
+            'component missing tax returns nested violation' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto(
+                    'relmon@1.0.0/3',
+                    '100.00',
+                    '121.00',
+                    '21.00',
+                    '21.00',
+                    scope: 'c',
+                    components: [new MonetaryComponentDto('100.00', '121.00', taxRate: '21.00')]
+                ),
+                'Tax must be specified for DL3.',
+                '.components.0.tax',
             ],
             'component tax rate mismatch' => [
                 new ProtocolIdentifier('relmon@1.0.0/3'),
@@ -134,6 +195,12 @@ class ValidationServiceTest extends TestCase
                 new ProtocolIdentifier('relmon@1.0.0/3'),
                 new RelMonDto('relmon@1.0.0/3', '100.00', '121.00', '122.00'),
                 'Tax must be less than or equal to gross for positive amounts.',
+                '.tax',
+            ],
+            'tax less than gross negative' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto('relmon@1.0.0/3', '-100.00', '-121.00', '-122.00'),
+                'Tax must be greater than or equal to gross for negative amounts.',
                 '.tax',
             ],
         ];

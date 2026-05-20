@@ -19,7 +19,7 @@ class UriJsonParser extends JsonStringParser implements FormatParserInterface
             throw new FormatParserWrongInputTypeException('JSON URI notation is expected (relmon-json://...).');
         }
 
-        $input = base64_decode($input);
+        $input = base64_decode($input, true);
 
         if ($input === false) {
             throw new FormatParserWrongInputTypeException('Could not decode JSON URI.');

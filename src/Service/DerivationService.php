@@ -79,10 +79,6 @@ class DerivationService
             throw new DerivationException('Calculated net/gross must be equal to the explicitly defined net/gross.');
         }
 
-        if ($calculatedNet + $tax !== $calculatedGross) {
-            throw new DerivationException('Net + tax must be equal to gross.');
-        }
-
         return new DerivedResult(
             $calculatedNet,
             $calculatedGross,

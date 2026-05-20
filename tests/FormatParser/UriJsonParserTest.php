@@ -128,4 +128,10 @@ class UriJsonParserTest extends TestCase
         $this->expectException(FormatParserWrongInputTypeException::class);
         (new UriJsonParser())->parse('relmon-json://' . base64_encode('{"protocol":'));
     }
+
+    public function testParseThrowsExceptionOnInvalidBase64Payload(): void
+    {
+        $this->expectException(FormatParserWrongInputTypeException::class);
+        (new UriJsonParser())->parse('relmon-json://***');
+    }
 }

@@ -18,6 +18,7 @@ use FromDevelopersForDevelopers\RelMon\FormatParser\UriXmlParser;
 use FromDevelopersForDevelopers\RelMon\FormatParser\XmlDomDocumentParser;
 use FromDevelopersForDevelopers\RelMon\FormatParser\XmlSimpleXmlParser;
 use FromDevelopersForDevelopers\RelMon\FormatParser\XmlStringParser;
+use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
 use FromDevelopersForDevelopers\RelMon\Service\DerivationService;
 use FromDevelopersForDevelopers\RelMon\Service\MinorsService;
 use FromDevelopersForDevelopers\RelMon\Service\RelMonService;
@@ -166,6 +167,19 @@ XML;
         $this->assertSame(RoundingApplication::TAX, $relmon->getRoundingApplication());
     }
 
+    public function testBuildThrowsValidationExceptionForValidationViolations(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $this->createService()->build([
+            'protocol' => 'relmon@1.0.0/3',
+            'net' => '121.00',
+            'gross' => '100.00',
+            'tax' => '21.00',
+            'taxRate' => '21.00',
+        ]);
+    }
+
     public function testBuildDerivesComponentScopeComponents(): void
     {
         $relmon = $this->createService()->build([
@@ -254,10 +268,69 @@ XML;
         }
     }
 
+    public function testBuildThrowsValidationExceptionWhenComponentNetTotalsDoNotMatchRoot(): void
+    {
+        try {
+            $this->createService()->build([
+                'protocol' => 'relmon@1.0.0/3',
+                'net' => '101.00',
+                'gross' => '121.00',
+                'tax' => '20.00',
+                'taxRate' => '21.00',
+                'scope' => 'c',
+                'components' => [
+                    [
+                        'net' => '40.00',
+                        'gross' => '48.40',
+                        'tax' => '8.40',
+                        'taxRate' => '21.00',
+                    ],
+                    [
+                        'net' => '60.00',
+                        'gross' => '72.60',
+                        'tax' => '12.60',
+                        'taxRate' => '21.00',
+                    ],
+                ],
+            ]);
+            $this->fail('ValidationException was expected.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                'Net amount does not match sum of component net amounts.',
+                $exception->getViolations()[0]->getMessage()
+            );
+            $this->assertSame('.net', $exception->getViolations()[0]->getField());
+        }
+    }
+
     public function testBuildThrowsFormatNotSupportedExceptionForUnknownInput(): void
     {
         $this->expectException(FormatNotSupportedException::class);
         $this->createService()->build(new \stdClass());
+    }
+
+    public function testGetPrecisionReturnsZeroForMinorsValues(): void
+    {
+        $service = $this->createService();
+        $dto = new RelMonDto('relmon@1.0.0/3:m', null, 12100);
+
+        $this->assertSame(0, $this->invokePrivateMethod($service, 'getPrecision', [$dto]));
+    }
+
+    public function testGetPrecisionReturnsZeroForWholeNumberStringsWithoutFraction(): void
+    {
+        $service = $this->createService();
+        $dto = new RelMonDto('relmon@1.0.0/99', '100', null, null);
+
+        $this->assertSame(0, $this->invokePrivateMethod($service, 'getPrecision', [$dto]));
+    }
+
+    public function testGetTaxRatePrecisionReturnsDefaultForWholeNumberTaxRate(): void
+    {
+        $service = $this->createService();
+        $dto = new RelMonDto('relmon@1.0.0/99', taxRate: '21');
+
+        $this->assertSame(3, $this->invokePrivateMethod($service, 'getTaxRatePrecision', [$dto, 3]));
     }
 
     private function createService(): RelMonService
@@ -279,5 +352,13 @@ XML;
             new MinorsService(),
             new DerivationService()
         );
+    }
+
+    private function invokePrivateMethod(object $object, string $methodName, array $args = []): mixed
+    {
+        $method = new \ReflectionMethod($object, $methodName);
+        $method->setAccessible(true);
+
+        return $method->invokeArgs($object, $args);
     }
 }
