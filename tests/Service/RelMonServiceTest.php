@@ -167,6 +167,55 @@ XML;
         $this->assertSame(RoundingApplication::TAX, $relmon->getRoundingApplication());
     }
 
+    public function testBuildAllowsIntegerTaxRateAndInfersPrecisionFromMaximumScale(): void
+    {
+        $relmon = $this->createService()->build([
+            'protocol' => 'relmon@1.0.0/2',
+            'net' => '100.0',
+            'gross' => '121.00',
+            'taxRate' => 21,
+        ]);
+
+        $this->assertSame(10000, $relmon->getNet());
+        $this->assertSame(12100, $relmon->getGross());
+        $this->assertSame(2100, $relmon->getTax());
+        $this->assertSame(21, $relmon->getTaxRate());
+        $this->assertSame(2, $relmon->getPrecision());
+    }
+
+    public function testBuildInfersPrecisionFromComponentsUsingMaximumScale(): void
+    {
+        $relmon = $this->createService()->build([
+            'protocol' => 'relmon@1.0.0/3',
+            'net' => '100.0',
+            'gross' => '121.0',
+            'tax' => '21.0',
+            'scope' => 'c',
+            'components' => [
+                [
+                    'net' => '40.00',
+                    'gross' => '48.40',
+                    'tax' => '8.40',
+                    'taxRate' => 21,
+                ],
+                [
+                    'net' => '60.00',
+                    'gross' => '72.60',
+                    'tax' => '12.60',
+                    'taxRate' => 21,
+                ],
+            ],
+        ]);
+
+        $this->assertSame(2, $relmon->getPrecision());
+        $this->assertSame(4000, $relmon->getComponents()[0]->getNet());
+        $this->assertSame(4840, $relmon->getComponents()[0]->getGross());
+        $this->assertSame(840, $relmon->getComponents()[0]->getTax());
+        $this->assertSame(6000, $relmon->getComponents()[1]->getNet());
+        $this->assertSame(7260, $relmon->getComponents()[1]->getGross());
+        $this->assertSame(1260, $relmon->getComponents()[1]->getTax());
+    }
+
     public function testBuildThrowsValidationExceptionForValidationViolations(): void
     {
         $this->expectException(ValidationException::class);
@@ -323,6 +372,20 @@ XML;
         $dto = new RelMonDto('relmon@1.0.0/99', '100', null, null);
 
         $this->assertSame(0, $this->invokePrivateMethod($service, 'getPrecision', [$dto]));
+    }
+
+    public function testGetPrecisionReturnsMaximumScaleAcrossRootAndComponents(): void
+    {
+        $service = $this->createService();
+        $dto = new RelMonDto(
+            'relmon@1.0.0/99',
+            '100.0',
+            '121.00',
+            '21.000',
+            components: [new \FromDevelopersForDevelopers\RelMon\Dto\MonetaryComponentDto('10.00', '12.10', '2.10')]
+        );
+
+        $this->assertSame(3, $this->invokePrivateMethod($service, 'getPrecision', [$dto]));
     }
 
     public function testGetTaxRatePrecisionReturnsDefaultForWholeNumberTaxRate(): void

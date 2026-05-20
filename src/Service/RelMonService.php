@@ -194,26 +194,28 @@ class RelMonService
             return $dto->precision;
         }
 
-        foreach ([$dto->net, $dto->gross, $dto->tax] as $basis) {
-            if (is_null($basis)) {
-                continue;
-            }
+        $precision = 0;
+        $fields = [$dto->net, $dto->gross, $dto->tax];
 
-            if (is_int($basis)) {
-                // Cannot determine precision from minors.
-                return 0;
-            }
-
-            $basis = explode('.', $basis);
-
-            if (count($basis) === 1) {
-                continue;
-            }
-
-            return strlen($basis[1]);
+        foreach ($dto->components as $component) {
+            $fields = array_merge($fields, [$component->getNet(), $component->getGross(), $component->getTax()]);
         }
 
-        return 0;
+        foreach ($fields as $basis) {
+            if (!is_string($basis)) {
+                continue;
+            }
+
+            $parts = explode('.', $basis);
+
+            if (count($parts) === 1) {
+                continue;
+            }
+
+            $precision = max($precision, strlen($parts[1]));
+        }
+
+        return $precision;
     }
 
     private function getTaxRatePrecision(RelMonDto|MonetaryComponentDto $dto, int $default = 0): int

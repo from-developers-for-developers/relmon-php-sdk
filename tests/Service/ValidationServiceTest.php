@@ -151,6 +151,16 @@ class ValidationServiceTest extends TestCase
                 'Tax rate must be a non-negative decimal.',
                 '.taxRate',
             ],
+            'integer tax rate is allowed' => [
+                new ProtocolIdentifier('relmon@1.0.0/2'),
+                new RelMonDto('relmon@1.0.0/2', '100.0', '121.00', taxRate: 21),
+                '',
+            ],
+            'mixed decimal places within precision are allowed' => [
+                new ProtocolIdentifier('relmon@1.0.0/3'),
+                new RelMonDto('relmon@1.0.0/3', '100.0', '121.00', '21.000', precision: 3),
+                '',
+            ],
             'component missing tax returns nested violation' => [
                 new ProtocolIdentifier('relmon@1.0.0/3'),
                 new RelMonDto(
