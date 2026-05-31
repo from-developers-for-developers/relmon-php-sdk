@@ -2,10 +2,12 @@
 
 namespace FromDevelopersForDevelopers\RelMon\Tests;
 
+use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
 use FromDevelopersForDevelopers\RelMon\Enum\Format;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
 use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
 use FromDevelopersForDevelopers\RelMon\Enum\Scope;
+use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserInterface;
 use FromDevelopersForDevelopers\RelMon\RelMonFacade;
 use PHPUnit\Framework\TestCase;
 
@@ -49,5 +51,34 @@ class RelMonFacadeTest extends TestCase
         $this->assertSame(Scope::ROOT, $relmon->getScope());
         $this->assertSame(RoundingMode::HALF_EVEN, $relmon->getRoundingMode());
         $this->assertSame(RoundingApplication::TAX, $relmon->getRoundingApplication());
+    }
+
+    public function testBuildSupportsCustomFormatParsers(): void
+    {
+        $parser = new class implements FormatParserInterface {
+            public function parse(mixed $input): RelMonDto
+            {
+                [$protocol, $net, $gross, $tax, $taxRate] = str_getcsv($input);
+
+                return new RelMonDto(
+                    protocolIdentifier: $protocol,
+                    net: $net,
+                    gross: $gross,
+                    tax: $tax,
+                    taxRate: $taxRate,
+                );
+            }
+        };
+
+        $relmon = RelMonFacade::build(
+            'relmon@1.0.0/3,100.00,121.00,21.00,21.00',
+            get_class($parser),
+            [$parser],
+        );
+
+        $this->assertSame(10000, $relmon->getNet());
+        $this->assertSame(12100, $relmon->getGross());
+        $this->assertSame(2100, $relmon->getTax());
+        $this->assertSame(2100, $relmon->getTaxRate());
     }
 }

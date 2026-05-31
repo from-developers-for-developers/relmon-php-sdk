@@ -48,6 +48,14 @@ use FromDevelopersForDevelopers\RelMon\RelMonFacade;
 $relmon = RelMonFacade::build($jsonString, Format::JSON_STRING);
 ```
 
+Custom format parsers can be passed as the third argument:
+
+```php
+$relmon = RelMonFacade::build($input, CsvRelMonParser::class, [
+    new CsvRelMonParser(),
+]);
+```
+
 ### Services
 
 Use `RelMonService` directly when your application manages dependencies itself.
@@ -334,7 +342,7 @@ In normal mode, `net`, `gross`, and `tax` values must be decimal strings such as
 
 ## Custom Formats
 
-Custom formats can be supported by implementing `FormatParserInterface` and registering the parser in the service stack. The parser converts your input into a `RelMonDto`; the SDK then handles validation, minors conversion, and derivation normally.
+Custom formats can be supported by implementing `FormatParserInterface` and passing the parser to `RelMonFacade::build()`. The parser converts your input into a `RelMonDto`; the SDK then handles validation, minors conversion, and derivation normally.
 
 ```php
 use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
@@ -357,28 +365,15 @@ final class CsvRelMonParser implements FormatParserInterface
 }
 ```
 
-Register the parser and pass its class name as the format:
+Pass the parser instance as the third argument and its class name as the explicit format:
 
 ```php
-use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserFactory;
-use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserLocator;
-use FromDevelopersForDevelopers\RelMon\Service\DerivationService;
-use FromDevelopersForDevelopers\RelMon\Service\MinorsService;
-use FromDevelopersForDevelopers\RelMon\Service\RelMonService;
-use FromDevelopersForDevelopers\RelMon\Service\ValidationService;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
 
-$service = new RelMonService(
-    new FormatParserFactory(new FormatParserLocator([
-        new CsvRelMonParser(),
-    ])),
-    new ValidationService(),
-    new MinorsService(),
-    new DerivationService(),
-);
-
-$relmon = $service->build(
+$relmon = RelMonFacade::build(
     'relmon@1.0.0/3,100.00,121.00,21.00,21.00',
     CsvRelMonParser::class,
+    [new CsvRelMonParser()],
 );
 ```
 

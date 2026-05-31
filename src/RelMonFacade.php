@@ -21,14 +21,17 @@ use FromDevelopersForDevelopers\RelMon\ValueObject\RelMonObject;
 
 final class RelMonFacade
 {
-    public static function build(mixed $input, string $format = Format::AUTO): RelMonObject
-    {
-        return self::createService()->build($input, $format);
+    public static function build(
+        mixed $input,
+        string $format = Format::AUTO,
+        array $customFormatParsers = []
+    ): RelMonObject {
+        return self::createService($customFormatParsers)->build($input, $format);
     }
 
-    private static function createService(): RelMonService
+    private static function createService(array $customFormatParsers = []): RelMonService
     {
-        $formatParserLocator = new FormatParserLocator([
+        $defaultFormatParsers = [
             new JsonArrayParser(),
             new JsonStringParser(),
             new XmlSimpleXmlParser(),
@@ -37,7 +40,9 @@ final class RelMonFacade
             new UriJsonParser(),
             new UriXmlParser(),
             new UriMinimalisticParser(),
-        ]);
+        ];
+
+        $formatParserLocator = new FormatParserLocator(array_merge($defaultFormatParsers, $customFormatParsers));
 
         return new RelMonService(
             new FormatParserFactory($formatParserLocator),
