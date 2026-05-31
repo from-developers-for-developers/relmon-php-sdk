@@ -104,65 +104,81 @@ $relmon = $service->build($input);
 
 JSON and XML inputs support normal field names and compact aliases. URI JSON and URI XML contain a base64-encoded JSON/XML payload. URI XML also accepts URL-safe base64 without padding.
 
-### JSON Array/String, Normal
+### JSON Array, Normal
 
-```json
-{
-  "protocol": "relmon@1.0.0/3",
-  "net": "100.00",
-  "gross": "121.00",
-  "tax": "21.00",
-  "taxRate": "21.00",
-  "unit": "EUR",
-  "precision": 2,
-  "scope": "r",
-  "rounding": {
-    "mode": "heven",
-    "application": "tax"
-  },
-  "components": [
-    {
-      "net": "100.00",
-      "gross": "121.00",
-      "tax": "21.00",
-      "taxRate": "21.00",
-      "comment": "Test component"
-    }
-  ]
-}
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$input = [
+    'protocol' => 'relmon@1.0.0/3',
+    'net' => '100.00',
+    'gross' => '121.00',
+    'tax' => '21.00',
+    'taxRate' => '21.00',
+    'unit' => 'EUR',
+    'precision' => 2,
+    'scope' => 'r',
+    'rounding' => [
+        'mode' => 'heven',
+        'application' => 'tax',
+    ],
+    'components' => [
+        [
+            'net' => '100.00',
+            'gross' => '121.00',
+            'tax' => '21.00',
+            'taxRate' => '21.00',
+            'comment' => 'Test component',
+        ],
+    ],
+];
+
+$relmon = RelMonFacade::build($input, Format::JSON_ARRAY);
 ```
 
-### JSON Array/String, Compact
+The same normal or compact JSON payload can be passed as a string with `Format::JSON_STRING`.
 
-```json
-{
-  "p": "relmon@1.0.0/3:c",
-  "n": "100.00",
-  "g": "121.00",
-  "t": "21.00",
-  "tr": "21.00",
-  "u": "EUR",
-  "pr": 2,
-  "s": "c",
-  "r": {
-    "m": "heven",
-    "a": "tax"
-  },
-  "cs": [
-    {
-      "n": "100.00",
-      "g": "121.00",
-      "t": "21.00",
-      "tr": "21.00",
-      "c": "Test component"
-    }
-  ]
-}
+### JSON String, Compact
+
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$input = json_encode([
+    'p' => 'relmon@1.0.0/3:c',
+    'n' => '100.00',
+    'g' => '121.00',
+    't' => '21.00',
+    'tr' => '21.00',
+    'u' => 'EUR',
+    'pr' => 2,
+    's' => 'c',
+    'r' => [
+        'm' => 'heven',
+        'a' => 'tax',
+    ],
+    'cs' => [
+        [
+            'n' => '100.00',
+            'g' => '121.00',
+            't' => '21.00',
+            'tr' => '21.00',
+            'c' => 'Test component',
+        ],
+    ],
+]);
+
+$relmon = RelMonFacade::build($input, Format::JSON_STRING);
 ```
 
-### XML String/SimpleXML/DOMDocument, Normal
+### XML String, Normal
 
-```xml
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$input = <<<XML
 <Relmon>
     <protocol>relmon@1.0.0/3</protocol>
     <net>100.00</net>
@@ -186,11 +202,18 @@ JSON and XML inputs support normal field names and compact aliases. URI JSON and
         </component>
     </components>
 </Relmon>
+XML;
+
+$relmon = RelMonFacade::build($input, Format::XML_STRING);
 ```
 
-### XML String/SimpleXML/DOMDocument, Compact
+### XML String, Compact
 
-```xml
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$input = <<<XML
 <Relmon>
     <p>relmon@1.0.0/3:c</p>
     <n>100.00</n>
@@ -214,11 +237,31 @@ JSON and XML inputs support normal field names and compact aliases. URI JSON and
         </entry>
     </cs>
 </Relmon>
+XML;
+
+$relmon = RelMonFacade::build($input, Format::XML_STRING);
+```
+
+The same normal or compact XML structure can be passed as `SimpleXMLElement` or `DOMDocument`:
+
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$simpleXml = new SimpleXMLElement($input);
+$relmon = RelMonFacade::build($simpleXml, Format::XML_SIMPLE_XML);
+
+$domDocument = new DOMDocument('1.0', 'UTF-8');
+$domDocument->loadXML($input);
+$relmon = RelMonFacade::build($domDocument, Format::XML_DOM_DOCUMENT);
 ```
 
 ### URI JSON
 
 ```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
 $payload = base64_encode(json_encode([
     'p' => 'relmon@1.0.0/3:c',
     'n' => '100.00',
@@ -228,22 +271,31 @@ $payload = base64_encode(json_encode([
 ]));
 
 $input = 'relmon-json://' . $payload;
+$relmon = RelMonFacade::build($input, Format::URI_JSON);
 ```
 
 ### URI XML
 
 ```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
 $payload = base64_encode('<Relmon><p>relmon@1.0.0/3:c</p><n>100.00</n><g>121.00</g><t>21.00</t></Relmon>');
 
 $input = 'relmon-xml://' . $payload;
+$relmon = RelMonFacade::build($input, Format::URI_XML);
 ```
 
 ### Minimalistic URI
 
 Minimalistic URI format has exactly four semicolon-separated values:
 
-```text
-relmon-min://1.0.0/3;100.00;121.00;21.00
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$input = 'relmon-min://1.0.0/3;100.00;121.00;21.00';
+$relmon = RelMonFacade::build($input, Format::URI_MINIMALISTIC);
 ```
 
 This maps to:
@@ -280,13 +332,62 @@ Supported values:
 
 In normal mode, `net`, `gross`, and `tax` values must be decimal strings such as `"100.00"`. In minors mode (`:m`), they must be integers such as `10000`.
 
+## Custom Formats
+
+Custom formats can be supported by implementing `FormatParserInterface` and registering the parser in the service stack. The parser converts your input into a `RelMonDto`; the SDK then handles validation, minors conversion, and derivation normally.
+
+```php
+use FromDevelopersForDevelopers\RelMon\Dto\RelMonDto;
+use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserInterface;
+
+final class CsvRelMonParser implements FormatParserInterface
+{
+    public function parse(mixed $input): RelMonDto
+    {
+        [$protocol, $net, $gross, $tax, $taxRate] = str_getcsv($input);
+
+        return new RelMonDto(
+            protocolIdentifier: $protocol,
+            net: $net,
+            gross: $gross,
+            tax: $tax,
+            taxRate: $taxRate,
+        );
+    }
+}
+```
+
+Register the parser and pass its class name as the format:
+
+```php
+use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserFactory;
+use FromDevelopersForDevelopers\RelMon\FormatParser\FormatParserLocator;
+use FromDevelopersForDevelopers\RelMon\Service\DerivationService;
+use FromDevelopersForDevelopers\RelMon\Service\MinorsService;
+use FromDevelopersForDevelopers\RelMon\Service\RelMonService;
+use FromDevelopersForDevelopers\RelMon\Service\ValidationService;
+
+$service = new RelMonService(
+    new FormatParserFactory(new FormatParserLocator([
+        new CsvRelMonParser(),
+    ])),
+    new ValidationService(),
+    new MinorsService(),
+    new DerivationService(),
+);
+
+$relmon = $service->build(
+    'relmon@1.0.0/3,100.00,121.00,21.00,21.00',
+    CsvRelMonParser::class,
+);
+```
+
 ## RelMonObject Public Methods
 
 `RelMonObject` stores monetary values as integer minors and exposes formatted helpers for display.
 
 | Method | Return | Description |
 | --- | --- | --- |
-| `__construct(int $net, int $gross, int $tax, ?int $taxRate = null, ?string $unit = null, ?int $precision = null, ?int $taxRatePrecision = null, string $scope = Scope::ROOT, string $roundingMode = RoundingMode::HALF_EVEN, string $roundingApplication = RoundingApplication::TAX, array $components = [])` | `RelMonObject` | Creates an immutable RelMon value object. |
 | `getNet()` | `int` | Net amount in minors. |
 | `getGross()` | `int` | Gross amount in minors. |
 | `getTax()` | `int` | Tax amount in minors. |
