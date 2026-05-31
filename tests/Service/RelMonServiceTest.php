@@ -167,6 +167,78 @@ XML;
         $this->assertSame(RoundingApplication::TAX, $relmon->getRoundingApplication());
     }
 
+    public function testBuildAppliesDefaultsBeforeValidation(): void
+    {
+        $relmon = $this->createService()->build(
+            [
+                'protocol' => 'relmon@1.0.0/1',
+                'net' => '100.00',
+            ],
+            Format::AUTO,
+            [
+                'unit' => 'EUR',
+                'scope' => Scope::ROOT,
+                'roundingMode' => RoundingMode::UP,
+                'roundingApplication' => RoundingApplication::TOTAL,
+                'taxRate' => '21.00',
+            ],
+        );
+
+        $this->assertSame(10000, $relmon->getNet());
+        $this->assertSame(12100, $relmon->getGross());
+        $this->assertSame(2100, $relmon->getTax());
+        $this->assertSame(2100, $relmon->getTaxRate());
+        $this->assertSame('EUR', $relmon->getUnit());
+        $this->assertSame(Scope::ROOT, $relmon->getScope());
+        $this->assertSame(RoundingMode::UP, $relmon->getRoundingMode());
+        $this->assertSame(RoundingApplication::TOTAL, $relmon->getRoundingApplication());
+    }
+
+    public function testBuildAppliesTaxRateDefaultToComponents(): void
+    {
+        $relmon = $this->createService()->build(
+            [
+                'protocol' => 'relmon@1.0.0/2',
+                'net' => '100.00',
+                'gross' => '121.00',
+                'tax' => '21.00',
+                'scope' => Scope::COMPONENT,
+                'components' => [
+                    [
+                        'net' => '40.00',
+                        'gross' => '48.40',
+                    ],
+                    [
+                        'net' => '60.00',
+                        'gross' => '72.60',
+                    ],
+                ],
+            ],
+            Format::AUTO,
+            ['taxRate' => '21.00'],
+        );
+
+        $this->assertSame(2100, $relmon->getTaxRate());
+        $this->assertSame(2100, $relmon->getComponents()[0]->getTaxRate());
+        $this->assertSame(2100, $relmon->getComponents()[1]->getTaxRate());
+        $this->assertSame(840, $relmon->getComponents()[0]->getTax());
+        $this->assertSame(1260, $relmon->getComponents()[1]->getTax());
+    }
+
+    public function testBuildDoesNotBypassValidationForInvalidDefaults(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $this->createService()->build(
+            [
+                'protocol' => 'relmon@1.0.0/1',
+                'net' => '100.00',
+            ],
+            Format::AUTO,
+            ['taxRate' => 'invalid'],
+        );
+    }
+
     public function testBuildAllowsIntegerTaxRateAndInfersPrecisionFromMaximumScale(): void
     {
         $relmon = $this->createService()->build([

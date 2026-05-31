@@ -56,6 +56,29 @@ $relmon = RelMonFacade::build($input, CsvRelMonParser::class, [
 ]);
 ```
 
+Default values for optional fields can be passed with the `defaults` named argument:
+
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingApplication;
+use FromDevelopersForDevelopers\RelMon\Enum\RoundingMode;
+use FromDevelopersForDevelopers\RelMon\Enum\Scope;
+use FromDevelopersForDevelopers\RelMon\RelMonFacade;
+
+$relmon = RelMonFacade::build(
+    [
+        'protocol' => 'relmon@1.0.0/1',
+        'net' => '100.00',
+    ],
+    defaults: [
+        'unit' => 'EUR',
+        'scope' => Scope::ROOT,
+        'roundingMode' => RoundingMode::HALF_EVEN,
+        'roundingApplication' => RoundingApplication::TAX,
+        'taxRate' => '21.00',
+    ],
+);
+```
+
 ### Services
 
 Use `RelMonService` directly when your application manages dependencies itself.
@@ -95,6 +118,17 @@ $service = new RelMonService(
 );
 
 $relmon = $service->build($input);
+```
+
+`RelMonService::build()` also accepts defaults as its third argument:
+
+```php
+use FromDevelopersForDevelopers\RelMon\Enum\Format;
+
+$relmon = $service->build($input, Format::AUTO, [
+    'unit' => 'EUR',
+    'taxRate' => '21.00',
+]);
 ```
 
 ## Supported Formats
@@ -339,6 +373,22 @@ Supported values:
 - protocol modes: `c` for compact, `m` for minors, for example `relmon@1.0.0/3:c.m`
 
 In normal mode, `net`, `gross`, and `tax` values must be decimal strings such as `"100.00"`. In minors mode (`:m`), they must be integers such as `10000`.
+
+## Default Values
+
+Defaults are applied after parsing and before validation. They reduce repeated payload data without changing validation behavior: if a default value is invalid, validation still fails; if a determinism level requires `taxRate`, a configured default `taxRate` is validated as part of the parsed data.
+
+Supported default keys:
+
+| Key | Applies to |
+| --- | --- |
+| `unit` | Root object when omitted. |
+| `scope` | Root object when omitted. |
+| `roundingMode` | Root object when omitted. |
+| `roundingApplication` | Root object when omitted. |
+| `taxRate` | Root object and components when omitted. |
+
+Explicit input values always take precedence over defaults.
 
 ## Custom Formats
 

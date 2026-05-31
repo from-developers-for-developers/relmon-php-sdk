@@ -30,12 +30,12 @@ class RelMonService
     ) {
     }
 
-    public function build(mixed $input, string $formatEnum = Format::AUTO): RelMonObject
+    public function build(mixed $input, string $formatEnum = Format::AUTO, array $defaults = []): RelMonObject
     {
         try {
             $format = $this->guessFormat($input, $formatEnum);
             $formatParser = $this->formatParserFactory->createFormatParser($format);
-            $dto = $formatParser->parse($input);
+            $dto = $this->applyDefaults($formatParser->parse($input), $defaults);
             $protocolIdentifier = new ProtocolIdentifier($dto->protocolIdentifier);
 
             $violations = $this->validationService->validate($protocolIdentifier, $dto);
@@ -91,6 +91,39 @@ class RelMonService
         } catch (ProtocolIdentifierInvalidException $e) {
             throw new ValidationException([new ViolationDto($e->getMessage(), 'protocolIdentifier')]);
         }
+    }
+
+    private function applyDefaults(RelMonDto $dto, array $defaults): RelMonDto
+    {
+        if (empty($defaults)) {
+            return $dto;
+        }
+
+        $components = [];
+
+        foreach ($dto->components as $component) {
+            $components[] = new MonetaryComponentDto(
+                net: $component->getNet(),
+                gross: $component->getGross(),
+                tax: $component->getTax(),
+                taxRate: $component->getTaxRate() ?? ($defaults['taxRate'] ?? null),
+                comment: $component->getComment(),
+            );
+        }
+
+        return new RelMonDto(
+            protocolIdentifier: $dto->protocolIdentifier,
+            net: $dto->net,
+            gross: $dto->gross,
+            tax: $dto->tax,
+            taxRate: $dto->taxRate ?? ($defaults['taxRate'] ?? null),
+            unit: $dto->unit ?? ($defaults['unit'] ?? null),
+            precision: $dto->precision,
+            scope: $dto->scope ?? ($defaults['scope'] ?? null),
+            roundingMode: $dto->roundingMode ?? ($defaults['roundingMode'] ?? null),
+            roundingApplication: $dto->roundingApplication ?? ($defaults['roundingApplication'] ?? null),
+            components: $components,
+        );
     }
 
     private function guessFormat(mixed $input, string $formatEnum): string

@@ -81,4 +81,25 @@ class RelMonFacadeTest extends TestCase
         $this->assertSame(2100, $relmon->getTax());
         $this->assertSame(2100, $relmon->getTaxRate());
     }
+
+    public function testBuildSupportsDefaults(): void
+    {
+        $relmon = RelMonFacade::build(
+            [
+                'protocol' => 'relmon@1.0.0/1',
+                'net' => '100.00',
+            ],
+            Format::AUTO,
+            [],
+            [
+                'unit' => 'EUR',
+                'taxRate' => '21.00',
+            ],
+        );
+
+        $this->assertSame(12100, $relmon->getGross());
+        $this->assertSame(2100, $relmon->getTax());
+        $this->assertSame(2100, $relmon->getTaxRate());
+        $this->assertSame('EUR', $relmon->getUnit());
+    }
 }

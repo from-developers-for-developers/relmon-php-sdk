@@ -24,9 +24,10 @@ final class RelMonFacade
     public static function build(
         mixed $input,
         string $format = Format::AUTO,
-        array $customFormatParsers = []
+        array $customFormatParsers = [],
+        array $defaults = []
     ): RelMonObject {
-        return self::createService($customFormatParsers)->build($input, $format);
+        return self::createService($customFormatParsers)->build($input, $format, $defaults);
     }
 
     private static function createService(array $customFormatParsers = []): RelMonService
